@@ -1,0 +1,9 @@
+E:\workspace\CshapeProject\RemoteDesk\bin\Release\RemoteDesk.exe.config
+E:\workspace\CshapeProject\RemoteDesk\bin\Release\RemoteDesk.exe
+E:\workspace\CshapeProject\RemoteDesk\bin\Release\RemoteDesk.pdb
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.Form1.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.Properties.Resources.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.csproj.GenerateResource.Cache
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.exe
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.pdb
+E:\workspace\CshapeProject\RemoteDesk\obj\Release\RemoteDesk.csprojResolveAssemblyReference.cache

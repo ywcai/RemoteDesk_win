@@ -1,0 +1,9 @@
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.Form1.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.Properties.Resources.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csproj.GenerateResource.Cache
+E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.exe.config
+E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.exe
+E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.pdb
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.exe
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.pdb
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache
