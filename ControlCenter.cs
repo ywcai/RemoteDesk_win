@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using ywcai.core.protocol;
 using ywcai.core.sokcet;
 using ywcai.global.config;
 using ywcai.util.draw;
@@ -16,64 +15,60 @@ namespace ywcai.core.control
         private MySocket mySocket=null;
         private Thread desksentThread = null;
         private String role ="normal";
+ 
 
         public ControlCenter()
         {
             if(mySocket==null)
             { 
             mySocket = MySocket.GetInstance();
+            mySocket.coreProccessing += dataProccess;
             }
         }
         //both
         private void newThread()
         {
-            Thread thread = new Thread(new ThreadStart(responseResult));
+            Thread thread = new Thread(new ThreadStart(startRecive));
             thread.IsBackground = true;
             thread.Start();
         }
-        public void responseResult()
+        private void startRecive()
         {
-            Decode decode = new Decode();
-            byte[] buf = null;
+            mySocket.startRecive();
+        }
+        public void dataProccess(byte tag,string username,byte[] buf)
+        {
             String msg = "";
-            while (mySocket.isConn)
+            if (tag!=0x06)
             {
-                buf = mySocket.reviced();
-                byte tag = buf[0];
-                switch (tag)
+                msg = System.Text.Encoding.UTF8.GetString(buf);
+            }
+            switch (tag)
                 {
                     case 0x01:
-                        msg = decode.deString(buf);
-                        String username = decode.getUsername(buf);
                         loginEnd(username, msg);
                         break;
                     case 0x02:
-                        msg = decode.deString(buf);
                         loginOutEnd(msg);
                         break;
                     case 0x03:
-                        msg = decode.deString(buf);
                         createEnd(msg);
                         break;
                     case 0x04:
                         disconnectEnd(msg);
                         break;
                     case 0x05:
-                        msg = decode.deString(buf);
                         responseCmd(msg);
                         break;
                     case 0x06:
-                        byte[] desk = decode.deImg(buf);
-                        drawDeskTop(desk);
+                        drawDeskTop(buf);
                         break;
                     case 0x07:
-                        msg = decode.deString(buf);
                         updateLists(msg);
                         break;
                     default:
                         //do nothing
                         break;
-                }
             }
         }
 
@@ -209,7 +204,7 @@ namespace ywcai.core.control
             {
                 try
                 {
-                    desksentThread.Abort();
+                    //desksentThread.Abort();
                 }
                 catch
                 {
@@ -223,7 +218,12 @@ namespace ywcai.core.control
         //master
         public void sendCmd()
         {
-                mySocket.sent((byte)0x05, mySocket.user, "this is cmd data ");
+            if (!isCtrl)
+            {
+                return;
+            }
+
+            mySocket.sent((byte)0x05, mySocket.user, "this is cmd data ");
         }
 
         public void drawDeskTop(byte[] deskTop)
@@ -241,13 +241,18 @@ namespace ywcai.core.control
         public void sendDesktop()
         {
             //新开线程处理被控端的桌面数据;
-            CatchScreen cs = new CatchScreen();
-            for (int i = 0; i < 100; i++)
-            {
+ 
+                if(!isCtrl)
+                {
+                    return ;
+                }
+                CatchScreen cs = new CatchScreen();
                 Byte[] desktop = cs.catDeskTop();
                 mySocket.sent((byte)0x06, mySocket.user, desktop);
-                Thread.Sleep(1000);
-            }
+               Thread.Sleep(10);
+             
+               sendDesktop();
+
         }
     }
 }

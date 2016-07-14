@@ -1,6 +1,4 @@
-﻿
-
-namespace ywcai.core.control
+﻿namespace ywcai.core.control
 {
     interface BothClientInf
     {
@@ -12,7 +10,7 @@ namespace ywcai.core.control
         void createEnd(string result);
         void disconnectLink();
         void disconnectEnd(string result);
-        void responseResult();
         void updateLists(string lists);
+        void dataProccess(byte tag, string username,byte[] buf);
     }
 }

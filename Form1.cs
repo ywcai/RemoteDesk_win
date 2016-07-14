@@ -47,7 +47,8 @@ namespace ywcai.core.veiw
             {
                 UiEventsHandler mh = setInfo;
                 object[] pList = { pMes.ToString(), method };
-                BeginInvoke(mh, pList);//异步执行了，不用加同步锁
+                //BeginInvoke(mh, pList);//异步执行了，不用加同步锁
+                Invoke(mh, pList);//同步执行了
             }
             else
             {
