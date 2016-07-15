@@ -12,6 +12,7 @@ namespace ywcai.util.buf
         public void init()
         {
             //buf = null;
+            //buff直接重复使用即可。
             temp = null;
             hasHead = true;
             hasRemaing = false;
