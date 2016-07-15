@@ -128,6 +128,7 @@ namespace ywcai.core.veiw
             deskTop.Height = 768;
             deskTop.Parent = panel;
             deskTop.Dock = DockStyle.Left|DockStyle.Top;
+            panel.BringToFront();
         }
         private void deleteDesk()
         {
