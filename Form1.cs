@@ -124,8 +124,8 @@ namespace ywcai.core.veiw
             panel.AutoSize = true;
             panel.Parent = this;
             panel.Dock = DockStyle.Fill;
-            deskTop.Width = 1024;
-            deskTop.Height = 786;
+            deskTop.Width = 1366;
+            deskTop.Height = 768;
             deskTop.Parent = panel;
             deskTop.Dock = DockStyle.Left|DockStyle.Top;
         }

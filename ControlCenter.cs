@@ -15,6 +15,7 @@ namespace ywcai.core.control
         private MySocket mySocket=null;
         private Thread desksentThread = null;
         private String role ="normal";
+        private CatchScreen cs = null;
  
 
         public ControlCenter()
@@ -42,6 +43,7 @@ namespace ywcai.core.control
             if (tag!=0x06)
             {
                 msg = System.Text.Encoding.UTF8.GetString(buf);
+                Console.WriteLine("revice data is " + msg);
             }
             switch (tag)
                 {
@@ -74,9 +76,12 @@ namespace ywcai.core.control
 
         public void loginIn(string username, string nickname)
         {
-            if(!isLogining)
+            if (!isLogining)
+            {
+                mySocket.Conn();
+            }
+            if(mySocket.isConn)
             { 
-            mySocket.Conn();
             mySocket.sent((byte)0x01, username, nickname);
             newThread();
             }
@@ -140,7 +145,7 @@ namespace ywcai.core.control
         public void createEnd(string result)
         {
 
-            if (result.Equals("master"))
+            if (result.Contains("master"))
             {
                 isCtrl = true;
                 setMaster();
@@ -179,7 +184,9 @@ namespace ywcai.core.control
             //添加对cmd的响应
             //都是耗时操作，分别开两个线程；
             updateInfo("连接成功，初始化容器，切换为Slave", MyConfig.INT_UPDATEUI_TXBOX);
-            desksentThread=new Thread(new ThreadStart(sendDesktop));
+            cs = new CatchScreen();
+            desksentThread =new Thread(new ThreadStart(sendDesktop));
+            desksentThread.IsBackground = true;
             desksentThread.Start();
         }
         public void disconnectEnd(string result)
@@ -202,6 +209,7 @@ namespace ywcai.core.control
             }
             if (role.Equals("slave"))
             {
+                cs.dispose();
                 try
                 {
                     //desksentThread.Abort();
@@ -241,16 +249,13 @@ namespace ywcai.core.control
         public void sendDesktop()
         {
             //新开线程处理被控端的桌面数据;
- 
                 if(!isCtrl)
                 {
-                    return ;
+                return ;
                 }
-                CatchScreen cs = new CatchScreen();
                 Byte[] desktop = cs.catDeskTop();
                 mySocket.sent((byte)0x06, mySocket.user, desktop);
-               Thread.Sleep(10);
-             
+               Thread.Sleep(100);
                sendDesktop();
 
         }

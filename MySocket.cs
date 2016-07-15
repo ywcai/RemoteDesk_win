@@ -64,21 +64,22 @@ namespace ywcai.core.sokcet
         }
         public void disConnect()
         {
-            if (!isConn)
-            {
+                if (!isConn)
+               {
                 updateInfo("已退出登录", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
-            }
+               }
                 try
                 {
-                    client.Close(MyConfig.INT_SOCKET_TIMEOUT);
+                    client.Close();
                     isConn = false;
+                    updateInfo("退出登录成功", MyConfig.INT_UPDATEUI_TXBOX);
                 }
                 catch (Exception)
                 {
-                    updateInfo("断开socket出现异常", MyConfig.INT_UPDATEUI_TXBOX);
+                    isConn = false;
+                    updateInfo("断开socket出现异常,可能是已经退出登录,", MyConfig.INT_UPDATEUI_TXBOX);
                 }
-            updateInfo("退出登录成功", MyConfig.INT_UPDATEUI_TXBOX);
         }
 
         public void sent(byte tag, String username, Object data)
@@ -104,7 +105,9 @@ namespace ywcai.core.sokcet
             }
             catch
             {
-                updateInfo("数据发送异常", MyConfig.INT_UPDATEUI_TXBOX);
+                disConnect();
+                updateInfo("发送数据异常，退出线程", MyConfig.INT_UPDATEUI_TXBOX);
+                return;
             }
         }
  
@@ -124,14 +127,29 @@ namespace ywcai.core.sokcet
                 return;
             }
             //do
-
             if(!bufState.hasRemaing)
             {
+                try
+                { 
                 bufState.remaining = client.Receive(bufState.buf);
                 bufState.hasRemaing = true;
+                }
+                catch
+                {
+                    disConnect();
+                    updateInfo("接收数据异常，退出线程", MyConfig.INT_UPDATEUI_TXBOX);
+                    return ;
+                }
             }
             if(bufState.hasHead)
             {
+                byte[] tt = new byte[MyConfig.INT_SOCKET_BUFFER_SIZE];
+                while(bufState.remaining<9)
+                {
+                    //没有包头，丢弃,继续接收数据，等到数据大于9后处理
+                    bufState.remaining += client.Receive(bufState.buf);
+                    bufState.buf.CopyTo(tt, bufState.remaining);
+                }
                 bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
                 bufState.pending = bufState.target;
                 bufState.temp= new byte[bufState.target];

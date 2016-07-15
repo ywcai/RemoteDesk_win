@@ -27,6 +27,7 @@ namespace ywcai.core.protocol
             dtemp[2] = inStream[6];
             dtemp[3] = inStream[5];
             Int32 dlenth = BitConverter.ToInt32(dtemp, 0);
+            Console.WriteLine("收到数据长度:" + dlenth);
             return dlenth;
         }
         public byte[] getData(byte[] inStream)
