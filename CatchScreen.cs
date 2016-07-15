@@ -11,18 +11,12 @@ namespace ywcai.util.draw
     {
         [DllImport("gdi32.dll")]
         public static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, System.Drawing.CopyPixelOperation dwRop);
-        Graphics bitmapGraphics;
-        Graphics screenGraphic;
-        Bitmap screenBitmap;
-        public CatchScreen()
-        {
-            screenGraphic = Graphics.FromHwnd(IntPtr.Zero);
-            screenBitmap = new Bitmap(GetScreenPixel()[0], GetScreenPixel()[1], screenGraphic);
-            bitmapGraphics = Graphics.FromImage(screenBitmap);
-        }
-
         public Byte[] catDeskTop()
         {
+            Graphics screenGraphic = Graphics.FromHwnd(IntPtr.Zero);
+            Bitmap screenBitmap = new Bitmap(GetScreenPixel()[0], GetScreenPixel()[1], screenGraphic);
+            //Bitmap screenBitmap = new Bitmap(300, 200, screenGraphic);
+            Graphics bitmapGraphics = Graphics.FromImage(screenBitmap);
             IntPtr hdcScreen  = screenGraphic.GetHdc();
             IntPtr hdcBitmap = bitmapGraphics.GetHdc();
             // Bitmap screenBitmap;
@@ -38,19 +32,18 @@ namespace ywcai.util.draw
             //IntPtr hdcBitmap = bitmapGraphics.GetHdc();
             //将屏幕捕获保存在位图中
             BitBlt(hdcBitmap, 0, 0, GetScreenPixel()[0], GetScreenPixel()[1], hdcScreen, 0, 0, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
-            // BitBlt(hdcBitmap, 0, 0, 300,200, hdcScreen, 0, 0, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
+            //BitBlt(hdcBitmap, 0, 0, 300,200, hdcScreen, 0, 0, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
+
             screenGraphic.ReleaseHdc(hdcScreen);
             //关闭位图句柄
             bitmapGraphics.ReleaseHdc(hdcBitmap);
             //关闭屏幕句柄
-            //screenGraphic.ReleaseHdc(hdcScreen);
-            //关闭位图句柄
-            //bitmapGraphics.ReleaseHdc(hdcBitmap);
+
 
             //释放位图对像
-            //bitmapGraphics.Dispose();
+            bitmapGraphics.Dispose();
             //释放屏幕对像
-            //screenGraphic.Dispose();
+            screenGraphic.Dispose();
             //screenBitmap.Save("e:\\test.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
             MemoryStream mStream = new MemoryStream();
                 screenBitmap.Save(mStream, System.Drawing.Imaging.ImageFormat.Jpeg);
@@ -65,13 +58,6 @@ namespace ywcai.util.draw
             Rectangle rc = scr.Bounds;
             int[] sp = new int[2] { rc.Width, rc.Height };
             return sp;
-        }
-        public void dispose()
-        {
-            //释放位图对像
-            bitmapGraphics.Dispose();
-            //释放屏幕对像
-            screenGraphic.Dispose();
         }
     }
 }

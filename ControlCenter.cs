@@ -209,7 +209,6 @@ namespace ywcai.core.control
             }
             if (role.Equals("slave"))
             {
-                cs.dispose();
                 try
                 {
                     //desksentThread.Abort();
@@ -255,9 +254,8 @@ namespace ywcai.core.control
                 }
                 Byte[] desktop = cs.catDeskTop();
                 mySocket.sent((byte)0x06, mySocket.user, desktop);
-               Thread.Sleep(100);
+               Thread.Sleep(2000);
                sendDesktop();
-
         }
     }
 }
