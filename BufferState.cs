@@ -11,7 +11,7 @@ namespace ywcai.util.buf
         public Int32 remaining, target, pending,bufPos,tempPos;
         public void init()
         {
-            //buf = null;
+            buf = null;
             //buff直接重复使用即可。
             temp = null;
             hasHead = true;
@@ -24,7 +24,8 @@ namespace ywcai.util.buf
         }
         public void skip()
         {
-            //buf = null;不处理buf，保留到下一次处理
+            buf = null;
+            //不处理buf，保留到下一次处理
             temp = null;
             temp.Initialize();
             hasHead = true;
@@ -39,7 +40,6 @@ namespace ywcai.util.buf
         public void connect()
         {
             //buf = null;
-            //buf = new byte[MyConfig.INT_SOCKET_BUFFER_SIZE];//重新接收数据
             //temp不处理，保留之前读取为输出的数据
             hasHead = false;
             hasRemaing = false;
