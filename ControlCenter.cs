@@ -211,7 +211,7 @@ namespace ywcai.core.control
             {
                 try
                 {
-                    //desksentThread.Abort();
+                    desksentThread.Abort();
                 }
                 catch
                 {
@@ -236,9 +236,9 @@ namespace ywcai.core.control
         public void drawDeskTop(byte[] deskTop)
         {
             //开始渲染desk
+
             updateDesk(deskTop);
         }
-
 
         //slave
         public void responseCmd(string cmd)
@@ -254,8 +254,8 @@ namespace ywcai.core.control
                 }
                 Byte[] desktop = cs.catDeskTop();
                 mySocket.sent((byte)0x06, mySocket.user, desktop);
-               Thread.Sleep(2000);
-               sendDesktop();
+                Thread.Sleep(100);
+                sendDesktop();
         }
     }
 }

@@ -115,76 +115,106 @@ namespace ywcai.core.sokcet
         {
             BufferState bufferState = new BufferState();
             bufferState.init();
+            while(isConn)
+            { 
             assembleData(bufferState);
+            }
+            bufferState.init();
+            Console.WriteLine("您的网络已断开，退出数据接收线程");
+            updateInfo("您的网络已断开，退出数据接收线程", MyConfig.INT_UPDATEUI_TXBOX);
         }
         private void assembleData(BufferState bufState)
         {
-
-            if (!isConn)
-            {
-                bufState.init();
-                updateInfo("您的网络已断开，退出数据接收线程", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
             //do
             if(!bufState.hasRemaing)
             {
                 try
-                { 
+                {
+                //Console.WriteLine("开始接收数据，");
+
                 bufState.remaining = client.Receive(bufState.buf);
+                //Console.WriteLine("接收数据完成");
+                //Console.WriteLine("remaining: "+bufState.remaining);
                 bufState.hasRemaing = true;
                 }
                 catch
                 {
-                    disConnect();
-                    updateInfo("接收数据异常，退出线程", MyConfig.INT_UPDATEUI_TXBOX);
-                    return ;
+                    //disConnect();
+                    Console.WriteLine("接收数据异常，已退出线程");
+                    updateInfo("接收数据异常，已退出线程", MyConfig.INT_UPDATEUI_TXBOX);
+                    bufState.init();
+                    return;
                 }
             }
             if(bufState.hasHead)
             {
-                byte[] tt = new byte[MyConfig.INT_SOCKET_BUFFER_SIZE];
+                //Console.WriteLine("remaining : " + bufState.remaining);
                 while(bufState.remaining<9)
                 {
-                    //没有包头，丢弃,继续接收数据，等到数据大于9后处理
-                    bufState.remaining += client.Receive(bufState.buf);
-                    bufState.buf.CopyTo(tt, bufState.remaining);
+                    //复制下一个buf的头部;
+                    bufState.buf = copyArray(bufState.buf, bufState.bufPos, bufState.buf,0, bufState.remaining);
+                    //接收数据组合正常头部包;
+                   Int32 size=client.Receive(bufState.buf,bufState.remaining,MyConfig.INT_SOCKET_BUFFER_SIZE-bufState.remaining,SocketFlags.None);
+                   bufState.remaining = bufState.remaining + size;
+                   bufState.bufPos = 0;
+                   bufState.tempPos = 0;
+                   
                 }
-                bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
-                bufState.pending = bufState.target;
-                bufState.temp= new byte[bufState.target];
+                byte tag = decode.getTag(bufState.buf,bufState.bufPos);
+                if(tag>0&&tag<8)
+               {
+               bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
+                 if (bufState.target < 9||bufState.target>=Int32.MaxValue)
+                 {
+                    Console.WriteLine("bufState.target err : "+bufState.target);
+                    bufState.drop();
+                 }
+                else
+                 {
+                    bufState.isRightPackage = true;
+                    bufState.pending = bufState.target;
+                    bufState.temp = new byte[bufState.target];
+                 }
+               }
+               else
+               {
+                    Console.WriteLine("tag err : " + tag);
+                    bufState.drop();
+               }
             }
-            if(bufState.pending == bufState.remaining)
+
+            if (bufState.pending == bufState.remaining && bufState.isRightPackage==true)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
 
-                byte tag = decode.getTag(bufState.temp);
+                byte tag = decode.getTag(bufState.temp,bufState.bufPos);
                 String usernmae = decode.getUsername(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
+                //Console.WriteLine("temp: " + bufState.temp.Length);
                 coreProccessing(tag,usernmae,result);
-
                 bufState.init();
             }
 
-            if (bufState.pending < bufState.remaining)
+            if (bufState.pending < bufState.remaining && bufState.isRightPackage==true)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.pending);
 
-                byte tag = decode.getTag(bufState.temp);
+                byte tag = decode.getTag(bufState.temp, bufState.bufPos);
                 String usernmae = decode.getUsername(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
+               // Console.WriteLine("temp: " + bufState.temp.Length);
                 coreProccessing(tag, usernmae, result);
 
+                //
                 bufState.skip();
             }
-            if (bufState.pending > bufState.remaining)
+            if (bufState.pending > bufState.remaining&& bufState.isRightPackage==true)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
                 //数据没有接收完整，重新接收数据
-
+                //Console.WriteLine("temp: " + bufState.temp.Length);
                 bufState.connect();
             }
-            assembleData(bufState);
         }
 
         private byte[] copyArray(byte[] src,Int32 srcIndex,byte[] dest,Int32 destPos,Int32 copyLen)

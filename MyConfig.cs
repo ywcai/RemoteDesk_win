@@ -14,7 +14,6 @@
         public const string STR_SERVER_IP = "119.6.204.54" ;
         public const int INT_SERVER_PORT =7772;
         public const int INT_SOCKET_TIMEOUT = 100;
-        public const int INT_SOCKET_BUFFER_SIZE = 2048 * 2048;
-
+        public const int INT_SOCKET_BUFFER_SIZE = 2048 * 16;
     }
 }
