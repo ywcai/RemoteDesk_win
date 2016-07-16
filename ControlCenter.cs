@@ -254,7 +254,7 @@ namespace ywcai.core.control
                 }
                 Byte[] desktop = cs.catDeskTop();
                 mySocket.sent((byte)0x06, mySocket.user, desktop);
-               Thread.Sleep(2000);
+               Thread.Sleep(100);
                sendDesktop();
         }
     }

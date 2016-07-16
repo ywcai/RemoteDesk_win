@@ -23,11 +23,10 @@ namespace ywcai.util.buf
         public void skip()
         {
             temp = null;
-            temp.Initialize();
             hasHead = true;
             hasRemaing = true;
-            remaining = remaining-target;
-            bufPos = bufPos + target;
+            remaining = remaining-pending;
+            bufPos = bufPos + pending;
             tempPos = 0;
             target = 0;
             pending = 0;

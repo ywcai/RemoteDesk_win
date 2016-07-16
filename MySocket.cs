@@ -115,18 +115,15 @@ namespace ywcai.core.sokcet
         {
             BufferState bufferState = new BufferState();
             bufferState.init();
-            assembleData(bufferState);
+            while (isConn)
+            {
+                assembleData(bufferState);
+            }
+            bufferState.init();
+            updateInfo("您的网络已断开，退出数据接收线程", MyConfig.INT_UPDATEUI_TXBOX);
         }
         private void assembleData(BufferState bufState)
         {
-
-            if (!isConn)
-            {
-                bufState.init();
-                updateInfo("您的网络已断开，退出数据接收线程", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
-            //do
             if(!bufState.hasRemaing)
             {
                 try
@@ -143,13 +140,6 @@ namespace ywcai.core.sokcet
             }
             if(bufState.hasHead)
             {
-                byte[] tt = new byte[MyConfig.INT_SOCKET_BUFFER_SIZE];
-                while(bufState.remaining<9)
-                {
-                    //没有包头，丢弃,继续接收数据，等到数据大于9后处理
-                    bufState.remaining += client.Receive(bufState.buf);
-                    bufState.buf.CopyTo(tt, bufState.remaining);
-                }
                 bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
                 bufState.pending = bufState.target;
                 bufState.temp= new byte[bufState.target];
@@ -177,6 +167,7 @@ namespace ywcai.core.sokcet
 
                 bufState.skip();
             }
+
             if (bufState.pending > bufState.remaining)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
@@ -184,7 +175,7 @@ namespace ywcai.core.sokcet
 
                 bufState.connect();
             }
-            assembleData(bufState);
+
         }
 
         private byte[] copyArray(byte[] src,Int32 srcIndex,byte[] dest,Int32 destPos,Int32 copyLen)
