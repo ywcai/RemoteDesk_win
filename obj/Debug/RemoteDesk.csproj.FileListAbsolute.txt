@@ -7,3 +7,12 @@ E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csproj.GenerateResour
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.exe
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.pdb
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache
+D:\project\RemoteDesk_win\bin\Debug\RemoteDesk.exe.config
+D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.exe
+D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.pdb
+D:\project\RemoteDesk_win\bin\Debug\RemoteDesk.exe
+D:\project\RemoteDesk_win\bin\Debug\RemoteDesk.pdb
+D:\project\RemoteDesk_win\obj\Debug\ywcai.core.veiw.Form1.resources
+D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.Properties.Resources.resources
+D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.csproj.GenerateResource.Cache
+D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache

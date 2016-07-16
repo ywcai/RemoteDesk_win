@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.24720.0
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteDesk", "RemoteDesk.csproj", "{1F79BA13-A72C-4D27-88C4-09E45121D81D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyncFloodTest", "..\SyncFloodTest\SyncFloodTest.csproj", "{EEAA7D88-BF05-46E0-880D-4AE0918E8DBA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,6 @@ Global
 		{1F79BA13-A72C-4D27-88C4-09E45121D81D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1F79BA13-A72C-4D27-88C4-09E45121D81D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1F79BA13-A72C-4D27-88C4-09E45121D81D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EEAA7D88-BF05-46E0-880D-4AE0918E8DBA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EEAA7D88-BF05-46E0-880D-4AE0918E8DBA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EEAA7D88-BF05-46E0-880D-4AE0918E8DBA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EEAA7D88-BF05-46E0-880D-4AE0918E8DBA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

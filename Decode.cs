@@ -5,9 +5,9 @@ namespace ywcai.core.protocol
 {
     class Decode
     {
-        public byte getTag(byte[] inStream)
+        public byte getTag(byte[] inStream,Int32 pos)
         {
-            return (byte)inStream[0];
+            return (byte)inStream[pos];
         }
         public Int32 getNameLen(byte[] inStream)
         {
@@ -27,7 +27,7 @@ namespace ywcai.core.protocol
             dtemp[2] = inStream[6];
             dtemp[3] = inStream[5];
             Int32 dlenth = BitConverter.ToInt32(dtemp, 0);
-            Console.WriteLine("收到数据长度:" + dlenth);
+            Console.WriteLine("消息体长度:" + dlenth);
             return dlenth;
         }
         public byte[] getData(byte[] inStream)
