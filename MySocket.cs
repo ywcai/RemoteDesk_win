@@ -126,6 +126,7 @@ namespace ywcai.core.sokcet
         private void assembleData(BufferState bufState)
         {
             //do
+
             if(!bufState.hasRemaing)
             {
                 try
@@ -140,7 +141,7 @@ namespace ywcai.core.sokcet
                 catch
                 {
                     //disConnect();
-                    Console.WriteLine("接收数据异常，已退出线程");
+                    //Console.WriteLine("接收数据异常，已退出线程");
                     updateInfo("接收数据异常，已退出线程", MyConfig.INT_UPDATEUI_TXBOX);
                     bufState.init();
                     return;
@@ -186,8 +187,7 @@ namespace ywcai.core.sokcet
             if (bufState.pending == bufState.remaining && bufState.isRightPackage==true)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
-
-                byte tag = decode.getTag(bufState.temp,bufState.bufPos);
+                byte tag = decode.getTag(bufState.temp,0);
                 String usernmae = decode.getUsername(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
                 //Console.WriteLine("temp: " + bufState.temp.Length);
@@ -198,11 +198,10 @@ namespace ywcai.core.sokcet
             if (bufState.pending < bufState.remaining && bufState.isRightPackage==true)
             {
                 bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.pending);
-
-                byte tag = decode.getTag(bufState.temp, bufState.bufPos);
+                byte tag = decode.getTag(bufState.temp, 0);
                 String usernmae = decode.getUsername(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
-               // Console.WriteLine("temp: " + bufState.temp.Length);
+                //Console.WriteLine("temp:  " + bufState.temp.Length);
                 coreProccessing(tag, usernmae, result);
 
                 //

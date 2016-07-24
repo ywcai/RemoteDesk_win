@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-
+using ywcai.global.config;
 
 namespace ywcai.util.draw
 {
@@ -11,46 +13,59 @@ namespace ywcai.util.draw
     {
         [DllImport("gdi32.dll")]
         public static extern bool BitBlt(IntPtr hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, IntPtr hdcSrc, int nXSrc, int nYSrc, System.Drawing.CopyPixelOperation dwRop);
-        public Byte[] catDeskTop()
+        public List<ImgEntity> getImgs()
         {
-            Graphics screenGraphic = Graphics.FromHwnd(IntPtr.Zero);
-            Bitmap screenBitmap = new Bitmap(GetScreenPixel()[0], GetScreenPixel()[1], screenGraphic);
-            //Bitmap screenBitmap = new Bitmap(300, 200, screenGraphic);
-            Graphics bitmapGraphics = Graphics.FromImage(screenBitmap);
-            IntPtr hdcScreen  = screenGraphic.GetHdc();
-            IntPtr hdcBitmap = bitmapGraphics.GetHdc();
-            // Bitmap screenBitmap;
-            // Graphics screenGraphic = Graphics.FromHwnd(IntPtr.Zero);
-
-            //根据屏幕大小建立位图，这就是最后截取到的*屏幕图像*
-            // screenBitmap = new Bitmap(GetScreenPixel()[0], GetScreenPixel()[1], screenGraphic);
-            //screenBitmap = new Bitmap(300,200,screenGraphic);
-            //建立位图相关Graphics
-            //建立屏幕上下文
-            //IntPtr hdcScreen = screenGraphic.GetHdc();
-            //建立位图上下文
-            //IntPtr hdcBitmap = bitmapGraphics.GetHdc();
-            //将屏幕捕获保存在位图中
-            BitBlt(hdcBitmap, 0, 0, GetScreenPixel()[0], GetScreenPixel()[1], hdcScreen, 0, 0, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
-            //BitBlt(hdcBitmap, 0, 0, 300,200, hdcScreen, 0, 0, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
-
-            screenGraphic.ReleaseHdc(hdcScreen);
-            //关闭位图句柄
-            bitmapGraphics.ReleaseHdc(hdcBitmap);
-            //关闭屏幕句柄
-
-
-            //释放位图对像
-            bitmapGraphics.Dispose();
-            //释放屏幕对像
-            screenGraphic.Dispose();
-            //screenBitmap.Save("e:\\test.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-            MemoryStream mStream = new MemoryStream();
-                screenBitmap.Save(mStream, System.Drawing.Imaging.ImageFormat.Jpeg);
-                Byte[] imgBuffer = new Byte[mStream.Length];
-                mStream.Seek(0, SeekOrigin.Begin);
-                mStream.Read(imgBuffer,0,(Int32)mStream.Length);
-                return imgBuffer;
+            List<ImgEntity> imgs = new List<ImgEntity>();
+            Int32[] screenXY = GetScreenPixel();
+            for (int indexX = 1; indexX <= MyConfig.INT_BLOCK_X_COUNT; indexX++)
+            {
+                for(int indexY=1; indexY<=MyConfig.INT_BLOCK_Y_COUNT;indexY++ )
+                {
+                    ImgEntity imgEntity = new ImgEntity();
+                    imgEntity.width = screenXY[0] / MyConfig.INT_BLOCK_X_COUNT;
+                    imgEntity.height = screenXY[1] / MyConfig.INT_BLOCK_Y_COUNT;
+                    imgEntity.posX = (indexX - 1) * imgEntity.width;
+                    imgEntity.posY = (indexY - 1) * imgEntity.height;
+                    if (indexX == MyConfig.INT_BLOCK_X_COUNT)
+                    {
+                        imgEntity.width = imgEntity.width + (screenXY[0] % MyConfig.INT_BLOCK_X_COUNT);
+                    }
+                    if (indexY==MyConfig.INT_BLOCK_Y_COUNT)
+                    {
+                        imgEntity.height = imgEntity.height + (screenXY[1] % MyConfig.INT_BLOCK_Y_COUNT);
+                    }
+                    Graphics screenGraphic = Graphics.FromHwnd(IntPtr.Zero);
+                    Bitmap screenBitmap = new Bitmap(imgEntity.width, imgEntity.height, screenGraphic);
+                    Graphics bitmapGraphics = Graphics.FromImage(screenBitmap);
+                    IntPtr hdcScreen = screenGraphic.GetHdc();
+                    IntPtr hdcBitmap = bitmapGraphics.GetHdc();
+                    BitBlt(hdcBitmap, 0, 0, imgEntity.width, imgEntity.height, hdcScreen, imgEntity.posX, imgEntity.posY, CopyPixelOperation.CaptureBlt | CopyPixelOperation.SourceCopy);
+                    screenGraphic.ReleaseHdc(hdcScreen);
+                    bitmapGraphics.ReleaseHdc(hdcBitmap);
+                    bitmapGraphics.Dispose();
+                    screenGraphic.Dispose();
+                    MemoryStream mStream = new MemoryStream();
+                    ImageCodecInfo[] CodecInfo = ImageCodecInfo.GetImageEncoders();
+                    ImageCodecInfo imgInfo = null;
+                    foreach (ImageCodecInfo ici in CodecInfo)
+                    {
+                        if (ici.MimeType == "image/jpeg")
+                        {
+                            imgInfo = ici;
+                        }
+                    }
+                    EncoderParameter p = new EncoderParameter(Encoder.Quality,MyConfig.INT_DESKTOP_QA);
+                    EncoderParameters ps = new EncoderParameters(1);
+                    ps.Param[0] = p;
+                    screenBitmap.Save(mStream, imgInfo, ps);
+                    Byte[] imgBuffer = new Byte[mStream.Length];
+                    mStream.Seek(0, SeekOrigin.Begin);
+                    mStream.Read(imgBuffer, 0, (Int32)mStream.Length);
+                    imgEntity.body = imgBuffer;
+                    imgs.Add(imgEntity);
+                }
+            }
+            return imgs;
         }
         public int[] GetScreenPixel()
         {

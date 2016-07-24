@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using ywcai.core.sokcet;
 using ywcai.global.config;
@@ -9,21 +13,26 @@ namespace ywcai.core.control
     class ControlCenter : BothClientInf ,MasterInf , SlaveInf
     {
         public event Action<Object, Int32> updateInfo;
-        public event Action<byte[]> updateDesk;
+        public event Action<Bitmap> updateDesk;
         public Boolean isLogining=false;
         public Boolean isCtrl = false;
         private MySocket mySocket=null;
         private Thread desksentThread = null;
         private String role ="normal";
-        private CatchScreen cs = null;
- 
+        private BinaryFormatter bf = new BinaryFormatter();
+        private ImgRecovery ir = new ImgRecovery();
+        private Object _lock = new Object();
+
 
         public ControlCenter()
         {
             if(mySocket==null)
             { 
-            mySocket = MySocket.GetInstance();
-            mySocket.coreProccessing += dataProccess;
+                lock(_lock)
+                { 
+                mySocket = MySocket.GetInstance();
+                mySocket.coreProccessing += dataProccess;
+                }
             }
         }
         //both
@@ -43,7 +52,7 @@ namespace ywcai.core.control
             if (tag!=0x06)
             {
                 msg = System.Text.Encoding.UTF8.GetString(buf);
-                Console.WriteLine("revice data is " + msg);
+                //Console.WriteLine("revice data is " + msg);
             }
             switch (tag)
                 {
@@ -175,7 +184,9 @@ namespace ywcai.core.control
             role = "master";
             updateInfo("连接成功，初始化容器，切换为Master", MyConfig.INT_UPDATEUI_TXBOX);
             updateInfo("初始化容器", MyConfig.INT_CREATE_DESK_CONTAINER);
-            sendCmd();
+            //cmdsentThread = new Thread(new ParameterizedThreadStart(exeSend));
+            //cmdsentThread.IsBackground = true;
+            //sendCmd();
         }
 
         private void setSlave()
@@ -184,7 +195,6 @@ namespace ywcai.core.control
             //添加对cmd的响应
             //都是耗时操作，分别开两个线程；
             updateInfo("连接成功，初始化容器，切换为Slave", MyConfig.INT_UPDATEUI_TXBOX);
-            cs = new CatchScreen();
             desksentThread =new Thread(new ThreadStart(sendDesktop));
             desksentThread.IsBackground = true;
             desksentThread.Start();
@@ -223,39 +233,105 @@ namespace ywcai.core.control
             }
         }
         //master
-        public void sendCmd()
+        public void sendCmd(String cmd)
         {
             if (!isCtrl)
             {
+               //try
+               // {
+               //     cmdsentThread.Abort();
+               // }
+               // catch
+               // {
+               //     updateInfo("中断指令发送线程异常", MyConfig.INT_UPDATEUI_TXBOX);
+               // }
+                role = "normal";
+                updateInfo("当前没有连接,切换为normal模式", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
+            lock(_lock)
+            { 
+            exeSend(cmd);
+            }
+            //Console.WriteLine(cmd);
+            // cmdsentThread.Start(cmd);
+        }
 
-            mySocket.sent((byte)0x05, mySocket.user, "this is cmd data ");
+        private void exeSend(String args)
+        {
+            String cmd = args.ToString();
+            mySocket.sent((byte)0x05, mySocket.user,cmd);
         }
 
         public void drawDeskTop(byte[] deskTop)
         {
-            //开始渲染desk
+            //反序列化
+            Bitmap deskImg = null;
+            using (MemoryStream ms = new MemoryStream(deskTop))
+            {
+                List<ImgEntity> imgs = (List<ImgEntity>)bf.Deserialize(ms);
+                deskImg = ir.recovery(imgs);
+            }
+            if(deskImg==null)
+            {
+                updateInfo("接收初始化数据错误",MyConfig.INT_UPDATEUI_TXBOX);
+            }
+            else
+            {
+                //开始渲染desk
+                updateDesk(deskImg);
+            }
 
-            updateDesk(deskTop);
         }
 
         //slave
         public void responseCmd(string cmd)
         {
-           //处理控制端传送的键盘鼠标事件;
+            //处理控制端传送的键盘鼠标事件;
+            updateInfo("Slave收到指令 : "+cmd, MyConfig.INT_UPDATEUI_TXBOX);
         }
         public void sendDesktop()
         {
-            //新开线程处理被控端的桌面数据;
-                if(!isCtrl)
-                {
-                return ;
+               List<ImgEntity> deskList = null;
+               CatchScreen cs = new CatchScreen();
+               List<ImgEntity> changes = null;
+               ImgCompara imgCompara = new ImgCompara();
+              //新开线程处理被控端的桌面数据;
+              while (isCtrl&&isLogining&&mySocket.isConn)
+              {
+                deskList = cs.getImgs();
+                changes = imgCompara.compara(deskList);
+                if(changes.Count>0)
+                { 
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                       BinaryFormatter bf = new BinaryFormatter();
+                       bf.Serialize(ms, changes);
+                       Byte[] imgBuffer = new Byte[ms.Length];
+                       ms.Seek(0, SeekOrigin.Begin);
+                       ms.Read(imgBuffer, 0, (Int32)ms.Length);
+                       mySocket.sent((byte)0x06, mySocket.user, imgBuffer);
+                    }
+                    //Console.WriteLine("send  changes.count : " + changes.Count );
+                    if(changes.Count>=(MyConfig.INT_BLOCK_X_COUNT*MyConfig.INT_BLOCK_Y_COUNT*2/3))
+                    {
+                        //数据变化较大的情况，减低刷新频率
+                        Thread.Sleep(500);
+                    }
+                    else
+                    {
+                        //数据变化较小,则增加刷新频率
+                        Thread.Sleep(100);
+                    }
                 }
-                Byte[] desktop = cs.catDeskTop();
-                mySocket.sent((byte)0x06, mySocket.user, desktop);
-                Thread.Sleep(100);
-                sendDesktop();
+                else
+                {
+                    //Console.WriteLine("no changes , thread sleep 1000 ms  " );
+                    //没有数据变换，则休眠1秒
+                    Thread.Sleep(1000);
+                }
+             }
+             Console.WriteLine("退出数据发送, isctrl:"+isCtrl +" isLogin:"+isLogining+" isconn:"+mySocket.isConn);
         }
     }
 }

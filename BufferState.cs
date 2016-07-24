@@ -34,7 +34,7 @@ namespace ywcai.util.buf
             tempPos = 0;
             target = 0;
             pending = 0;
-           // Console.WriteLine("skip: e " + this.toString());
+            //Console.WriteLine("skip: e " + this.toString());
 
         }
         public void connect()
