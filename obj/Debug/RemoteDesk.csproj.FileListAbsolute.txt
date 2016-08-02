@@ -10,9 +10,11 @@ D:\project\RemoteDesk_win\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.ca
 E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.exe.config
 E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.exe
 E:\workspace\CshapeProject\RemoteDesk\bin\Debug\RemoteDesk.pdb
-E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.Form1.resources
-E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.Properties.Resources.resources
+E:\workspace\CshapeProject\RemoteDesk\bin\Debug\CSkin.dll
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csproj.GenerateResource.Cache
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.exe
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.pdb
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.LoginForm.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.Properties.Resources.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.RemoteDesk.resources
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache

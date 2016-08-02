@@ -1,5 +1,4 @@
 ﻿using System;
-
 using System.Windows.Forms;
 
 namespace ywcai.core.veiw
@@ -14,7 +13,8 @@ namespace ywcai.core.veiw
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            // Application.Run(new RemoteDesk());
+             Application.Run(new LoginForm());
         }
     }
 }

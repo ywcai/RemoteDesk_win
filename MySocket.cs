@@ -9,7 +9,7 @@ namespace ywcai.core.sokcet
     class MySocket
     {
         public event Action<Object, Int32> updateInfo;
-        public event Action<byte,string,byte[]> coreProccessing;
+        public event Action<byte, string, byte[]> coreProccessing;
 
         private static MySocket instance = null;
         private static object _lock = new object();
@@ -18,7 +18,7 @@ namespace ywcai.core.sokcet
         private String remoteIP = MyConfig.STR_SERVER_IP;
         private Int32 remotePort = MyConfig.INT_SERVER_PORT;
         public Boolean isConn = false;
-        public String user = "";
+        public String token = "";
         private Decode decode = new Decode();
         private MySocket()
         {
@@ -64,40 +64,40 @@ namespace ywcai.core.sokcet
         }
         public void disConnect()
         {
-                if (!isConn)
-               {
+            if (!isConn)
+            {
                 updateInfo("已退出登录", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
-               }
-                try
-                {
-                    client.Close();
-                    isConn = false;
-                    updateInfo("退出登录成功", MyConfig.INT_UPDATEUI_TXBOX);
-                }
-                catch (Exception)
-                {
-                    isConn = false;
-                    updateInfo("断开socket出现异常,可能是已经退出登录,", MyConfig.INT_UPDATEUI_TXBOX);
-                }
+            }
+            try
+            {
+                client.Close();
+                isConn = false;
+                updateInfo("退出登录成功", MyConfig.INT_UPDATEUI_TXBOX);
+            }
+            catch (Exception)
+            {
+                isConn = false;
+                updateInfo("断开socket出现异常,可能是已经退出登录,", MyConfig.INT_UPDATEUI_TXBOX);
+            }
         }
 
-        public void sent(byte tag, String username, Object data)
+        public void sent(byte pReqType,byte hasToken,String pToken, Object data)
         {
             if (!isConn)
             {
                 updateInfo("您还没有连接网络", MyConfig.INT_UPDATEUI_TXBOX);
-                return ;
+                return;
             }
             byte[] buf = null;
             Encode encode = new Encode();
-            if (tag == 0x06)
+            if (pReqType == MyConfig.REQ_TYPE_DESKTOP_SWITCH)
             {
-                buf = encode.enImg(tag, username, (byte[])data);
+                buf = encode.enImg(pReqType, hasToken, pToken, (byte[])data);
             }
             else
             {
-                buf = encode.enString(tag, username, data.ToString());
+                buf = encode.enString(pReqType, hasToken,pToken, data.ToString());
             }
             try
             {
@@ -110,14 +110,14 @@ namespace ywcai.core.sokcet
                 return;
             }
         }
- 
+
         public void startRecive()
         {
             BufferState bufferState = new BufferState();
             bufferState.init();
-            while(isConn)
-            { 
-            assembleData(bufferState);
+            while (isConn)
+            {
+                assembleData(bufferState);
             }
             bufferState.init();
             Console.WriteLine("您的网络已断开，退出数据接收线程");
@@ -127,16 +127,16 @@ namespace ywcai.core.sokcet
         {
             //do
 
-            if(!bufState.hasRemaing)
+            if (!bufState.hasRemaing)
             {
                 try
                 {
-                //Console.WriteLine("开始接收数据，");
+                    //Console.WriteLine("开始接收数据，");
 
-                bufState.remaining = client.Receive(bufState.buf);
-                //Console.WriteLine("接收数据完成");
-                //Console.WriteLine("remaining: "+bufState.remaining);
-                bufState.hasRemaing = true;
+                    bufState.remaining = client.Receive(bufState.buf);
+                    //Console.WriteLine("接收数据完成");
+                    //Console.WriteLine("remaining: "+bufState.remaining);
+                    bufState.hasRemaing = true;
                 }
                 catch
                 {
@@ -147,82 +147,73 @@ namespace ywcai.core.sokcet
                     return;
                 }
             }
-            if(bufState.hasHead)
+            if (bufState.hasHead)
             {
                 //Console.WriteLine("remaining : " + bufState.remaining);
-                while(bufState.remaining<9)
+                while (bufState.remaining < MyConfig.INT_PACKAGE_HEAD_LEN)
                 {
                     //复制下一个buf的头部;
-                    bufState.buf = copyArray(bufState.buf, bufState.bufPos, bufState.buf,0, bufState.remaining);
+                    MyUtil.copyArray(bufState.buf, bufState.bufPos, bufState.buf, 0, bufState.remaining);
                     //接收数据组合正常头部包;
-                   Int32 size=client.Receive(bufState.buf,bufState.remaining,MyConfig.INT_SOCKET_BUFFER_SIZE-bufState.remaining,SocketFlags.None);
-                   bufState.remaining = bufState.remaining + size;
-                   bufState.bufPos = 0;
-                   bufState.tempPos = 0;
-                   
+                    Int32 size = client.Receive(bufState.buf, bufState.remaining, MyConfig.INT_SOCKET_BUFFER_SIZE - bufState.remaining, SocketFlags.None);
+                    bufState.remaining = bufState.remaining + size;
+                    bufState.bufPos = 0;
+                    bufState.tempPos = 0;
                 }
-                byte tag = decode.getTag(bufState.buf,bufState.bufPos);
-                if(tag>0&&tag<8)
-               {
-               bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
-                 if (bufState.target < 9||bufState.target>=Int32.MaxValue)
-                 {
-                    Console.WriteLine("bufState.target err : "+bufState.target);
-                    bufState.drop();
-                 }
+                byte headFlag = decode.getHeadFlag(bufState.buf, bufState.bufPos);
+                byte dataType = decode.getDataType(bufState.buf, bufState.bufPos);
+                byte reqType = decode.getReqType(bufState.buf, bufState.bufPos);
+                if (headFlag == MyConfig.PROTOCOL_HEAD_FLAG && reqType > 0 && reqType < 8)
+                {
+                    bufState.target = decode.getPackLen(bufState.buf, bufState.bufPos);
+                    if (bufState.target < MyConfig.INT_PACKAGE_HEAD_LEN || bufState.target >= Int32.MaxValue)
+                    {
+                        Console.WriteLine("bufState.target err : " + bufState.target);
+                        bufState.drop();
+                    }
+                    else
+                    {
+                        bufState.isRightPackage = true;
+                        bufState.pending = bufState.target;
+                        bufState.temp = new byte[bufState.target];
+                    }
+                }
                 else
-                 {
-                    bufState.isRightPackage = true;
-                    bufState.pending = bufState.target;
-                    bufState.temp = new byte[bufState.target];
-                 }
-               }
-               else
-               {
-                    Console.WriteLine("tag err : " + tag);
+                {
+                    Console.WriteLine("dataType err : " + dataType);
                     bufState.drop();
-               }
+                }
             }
 
-            if (bufState.pending == bufState.remaining && bufState.isRightPackage==true)
+            if (bufState.pending == bufState.remaining && bufState.isRightPackage == true)
             {
-                bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
-                byte tag = decode.getTag(bufState.temp,0);
-                String usernmae = decode.getUsername(bufState.temp);
+                MyUtil.copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
+                byte reqType = decode.getReqType(bufState.temp, 0);
+                String token = decode.getToken(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
                 //Console.WriteLine("temp: " + bufState.temp.Length);
-                coreProccessing(tag,usernmae,result);
+                coreProccessing(reqType, token, result);
                 bufState.init();
             }
 
-            if (bufState.pending < bufState.remaining && bufState.isRightPackage==true)
+            if (bufState.pending < bufState.remaining && bufState.isRightPackage == true)
             {
-                bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.pending);
-                byte tag = decode.getTag(bufState.temp, 0);
-                String usernmae = decode.getUsername(bufState.temp);
+                MyUtil.copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.pending);
+                byte reqType = decode.getReqType(bufState.temp, 0);
+                String token = decode.getToken(bufState.temp);
                 byte[] result = decode.getData(bufState.temp);
                 //Console.WriteLine("temp:  " + bufState.temp.Length);
-                coreProccessing(tag, usernmae, result);
-
-                //
+                coreProccessing(reqType, token, result);
                 bufState.skip();
             }
-            if (bufState.pending > bufState.remaining&& bufState.isRightPackage==true)
+            if (bufState.pending > bufState.remaining && bufState.isRightPackage == true)
             {
-                bufState.temp = copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
+                MyUtil.copyArray(bufState.buf, bufState.bufPos, bufState.temp, bufState.tempPos, bufState.remaining);
                 //数据没有接收完整，重新接收数据
                 //Console.WriteLine("temp: " + bufState.temp.Length);
                 bufState.connect();
             }
         }
-
-        private byte[] copyArray(byte[] src,Int32 srcIndex,byte[] dest,Int32 destPos,Int32 copyLen)
-        {
-            for(int i=0; i<copyLen;i++)
-            {
-                dest[destPos+i] = src[srcIndex + i];
-            }
-            return dest;
-        }
+  
     }
 }

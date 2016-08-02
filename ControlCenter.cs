@@ -22,8 +22,6 @@ namespace ywcai.core.control
         private BinaryFormatter bf = new BinaryFormatter();
         private ImgRecovery ir = new ImgRecovery();
         private Object _lock = new Object();
-
-
         public ControlCenter()
         {
             if(mySocket==null)
@@ -46,44 +44,44 @@ namespace ywcai.core.control
         {
             mySocket.startRecive();
         }
-        public void dataProccess(byte tag,string username,byte[] buf)
+        public void dataProccess(byte reqType,string token,byte[] buf)
         {
             String msg = "";
-            if (tag!=0x06)
+            if (reqType != MyConfig.REQ_TYPE_DESKTOP_SWITCH)
             {
                 msg = System.Text.Encoding.UTF8.GetString(buf);
                 //Console.WriteLine("revice data is " + msg);
             }
-            switch (tag)
+            switch (reqType)
                 {
-                    case 0x01:
-                        loginEnd(username, msg);
+                    case MyConfig.REQ_TYPE_USER_LOGIN_IN:
+                        loginEnd(token, msg);
                         break;
-                    case 0x02:
+                    case MyConfig.REQ_TYPE_USER_LOGIN_OUT:
                         loginOutEnd(msg);
                         break;
-                    case 0x03:
+                    case MyConfig.REQ_TYPE_DESK_LINK_OPEN:
                         createEnd(msg);
                         break;
-                    case 0x04:
+                    case MyConfig.REQ_TYPE_DESK_SHOWDOWN:
                         disconnectEnd(msg);
                         break;
-                    case 0x05:
+                    case MyConfig.REQ_TYPE_CONTROL_CMD:
                         responseCmd(msg);
                         break;
-                    case 0x06:
+                    case MyConfig.REQ_TYPE_DESKTOP_SWITCH:
                         drawDeskTop(buf);
                         break;
-                    case 0x07:
+                    case MyConfig.REQ_TYPE_CLIENT_LIST_UPDATE:
                         updateLists(msg);
                         break;
-                    default:
+                default:
                         //do nothing
                         break;
             }
         }
 
-        public void loginIn(string username, string nickname)
+        public void loginIn(string token, string content)
         {
             if (!isLogining)
             {
@@ -91,7 +89,7 @@ namespace ywcai.core.control
             }
             if(mySocket.isConn)
             { 
-            mySocket.sent((byte)0x01, username, nickname);
+            mySocket.sent((byte)MyConfig.REQ_TYPE_USER_LOGIN_IN,MyConfig.PROTOCOL_HEAD_NOT_TOKEN,token, content);
             newThread();
             }
         }
@@ -100,52 +98,62 @@ namespace ywcai.core.control
         {
             if(isLogining)
             { 
-            mySocket.sent((byte)0x02,mySocket.user, nickname);
+            mySocket.sent((byte)MyConfig.REQ_TYPE_USER_LOGIN_OUT, MyConfig.PROTOCOL_HEAD_HAS_TOKEN,mySocket.token, nickname);
             }
         }
+
         public void updateLists(string lists)
         {
             updateInfo(lists, MyConfig.INT_UPDATEUI_LIST);
         }
+
+
         public void createLink(string index)
         {
             if(!isCtrl)
             { 
-            mySocket.sent((byte)0x03, mySocket.user, index);
+            mySocket.sent((byte)MyConfig.REQ_TYPE_DESK_LINK_OPEN, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, index);
             }
         }
         public void disconnectLink()
         {
             if(isCtrl)
             { 
-            mySocket.sent((byte)0x04, mySocket.user, "disconnect");
+            mySocket.sent((byte)MyConfig.REQ_TYPE_DESK_SHOWDOWN, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, "disconnect");
             }
         }
-        public void loginEnd(string username,string result)
+        public void loginEnd(string pToken,string result)
         {
-            if (result.Equals("login_ok"))
+            if (result.Contains("login_ok"))
             {
-                mySocket.user = "ywcai";
+
+                mySocket.token = pToken;
                 isLogining = true;
                 updateInfo("登录成功", MyConfig.INT_UPDATEUI_TXBOX);
+
+                String[] str = result.Split('#');
+                if(str.Length>0&&!str[1].Equals(""))
+                { 
+                updateInfo(str[1], MyConfig.INT_INIT_CLIENT_LIST);
+                }
                 return ;
             }
-                mySocket.user = "";
+                mySocket.token = "";
                 isLogining = false;
                 mySocket.disConnect();
-                updateInfo("登录失败", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("登录验证令牌失败", MyConfig.INT_UPDATEUI_TXBOX);
         }
 
         public void loginOutEnd(string result)
         {
             if (result.Equals("login_out_ok"))
             {
-                mySocket.user = "";
+                mySocket.token = "";
                 isLogining = false;
                 mySocket.disConnect();
-                updateInfo("清空列表", MyConfig.INT_CLEAR_LIST);
-                updateInfo("清除桌面容器", MyConfig.INT_DELETE_DESK_CONTAINER);
-                disconnectEnd("clear");
+                updateInfo("离线", MyConfig.INT_CLEAR_LIST);
+                //updateInfo("清除桌面容器", MyConfig.INT_DELETE_DESK_CONTAINER);
+                //disconnectEnd("clear");
                 return ;
             }
                 updateInfo("未能正常退出，是否强制退出系统", MyConfig.INT_UPDATEUI_TXBOX);  
@@ -162,40 +170,39 @@ namespace ywcai.core.control
                 //添加鼠标键盘事件;
                 //对PIC容器进行初始化 
             }
-            if (result.Equals("slave"))
+            if (result.Contains("slave"))
             {
                 isCtrl = true;
                 setSlave();
                 //开始发送桌面数据
                 return;
             }
-            if (result.Equals("has_link"))
+            if (result.Contains("has_link"))
             {
                 isCtrl = false;
                 updateInfo("创建远程桌面连接失败，原因是该用户已经在线上", MyConfig.INT_UPDATEUI_TXBOX);
-                //开始发送桌面数据
                 return;
             }
             isCtrl = false;
             updateInfo("创建远程桌面连接失败，原因未知 : "+result, MyConfig.INT_UPDATEUI_TXBOX);
         }
-        private void setMaster()
+        private void setMaster( )
         {
-            role = "master";
             updateInfo("连接成功，初始化容器，切换为Master", MyConfig.INT_UPDATEUI_TXBOX);
-            updateInfo("初始化容器", MyConfig.INT_CREATE_DESK_CONTAINER);
-            //cmdsentThread = new Thread(new ParameterizedThreadStart(exeSend));
-            //cmdsentThread.IsBackground = true;
-            //sendCmd();
+
+            updateInfo("add desk container", MyConfig.INT_CREATE_DESK_CONTAINER);
+
+
         }
 
-        private void setSlave()
+        private void setSlave( )
         {
-            role = "slave";
             //添加对cmd的响应
             //都是耗时操作，分别开两个线程；
             updateInfo("连接成功，初始化容器，切换为Slave", MyConfig.INT_UPDATEUI_TXBOX);
+
             desksentThread =new Thread(new ThreadStart(sendDesktop));
+
             desksentThread.IsBackground = true;
             desksentThread.Start();
         }
@@ -232,36 +239,19 @@ namespace ywcai.core.control
                 return ;
             }
         }
+
         //master
         public void sendCmd(String cmd)
         {
             if (!isCtrl)
             {
-               //try
-               // {
-               //     cmdsentThread.Abort();
-               // }
-               // catch
-               // {
-               //     updateInfo("中断指令发送线程异常", MyConfig.INT_UPDATEUI_TXBOX);
-               // }
                 role = "normal";
                 updateInfo("当前没有连接,切换为normal模式", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
-            lock(_lock)
-            { 
-            exeSend(cmd);
-            }
-            //Console.WriteLine(cmd);
-            // cmdsentThread.Start(cmd);
+            mySocket.sent((byte)MyConfig.REQ_TYPE_CONTROL_CMD, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, cmd);
         }
 
-        private void exeSend(String args)
-        {
-            String cmd = args.ToString();
-            mySocket.sent((byte)0x05, mySocket.user,cmd);
-        }
 
         public void drawDeskTop(byte[] deskTop)
         {
@@ -287,9 +277,10 @@ namespace ywcai.core.control
         //slave
         public void responseCmd(string cmd)
         {
-            //处理控制端传送的键盘鼠标事件;
-            updateInfo("Slave收到指令 : "+cmd, MyConfig.INT_UPDATEUI_TXBOX);
+            updateInfo("收到指令 : "+cmd, MyConfig.INT_UPDATEUI_TXBOX);
+            ResponseEvent.exeEvent(cmd);
         }
+
         public void sendDesktop()
         {
                List<ImgEntity> deskList = null;
@@ -310,25 +301,29 @@ namespace ywcai.core.control
                        Byte[] imgBuffer = new Byte[ms.Length];
                        ms.Seek(0, SeekOrigin.Begin);
                        ms.Read(imgBuffer, 0, (Int32)ms.Length);
-                       mySocket.sent((byte)0x06, mySocket.user, imgBuffer);
+                       mySocket.sent((byte)MyConfig.REQ_TYPE_DESKTOP_SWITCH, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, imgBuffer);
+                       //Console.WriteLine(ms.Length);
                     }
-                    //Console.WriteLine("send  changes.count : " + changes.Count );
                     if(changes.Count>=(MyConfig.INT_BLOCK_X_COUNT*MyConfig.INT_BLOCK_Y_COUNT*2/3))
                     {
-                        //数据变化较大的情况，减低刷新频率
-                        Thread.Sleep(500);
+                        //超过2/3的时候，切换低频率
+                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_LOW);
+                    }
+                    else if(changes.Count >= (MyConfig.INT_BLOCK_X_COUNT * MyConfig.INT_BLOCK_Y_COUNT * 1 / 3))
+                    {
+                        //数据变化1/3到2/3之间，则切换为中频
+                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_NORMAL);
                     }
                     else
                     {
-                        //数据变化较小,则增加刷新频率
-                        Thread.Sleep(100);
+                        //低于1/3数据变换，则切换为高频
+                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_HIGHT);
                     }
                 }
                 else
                 {
-                    //Console.WriteLine("no changes , thread sleep 1000 ms  " );
                     //没有数据变换，则休眠1秒
-                    Thread.Sleep(1000);
+                    Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_SLEEP);
                 }
              }
              Console.WriteLine("退出数据发送, isctrl:"+isCtrl +" isLogin:"+isLogining+" isconn:"+mySocket.isConn);

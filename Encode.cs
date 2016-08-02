@@ -1,58 +1,49 @@
 ﻿using System;
-
+using ywcai.global.config;
 
 namespace ywcai.core.protocol
 {
     class Encode
     {
-        public  byte[] enString(byte ptag,String username,String data)
+        public  byte[] enString(byte pReqType,byte pHasToken,String pToken,String pData)
         {
-            byte[] body = System.Text.Encoding.UTF8.GetBytes(data);
-            byte[] user = System.Text.Encoding.UTF8.GetBytes(username);
-            byte tag = ptag;
-            Int32 lenth = body.Length;
-            Int32 nlenth = user.Length;
-            byte[] narry = new byte[4];
-            narry[3] = (byte)(nlenth & 0xFF);
-            narry[2] = (byte)((nlenth & 0xFF00) >> 8);
-            narry[1] = (byte)((nlenth & 0xFF0000) >> 16);
-            narry[0] = (byte)((nlenth >> 24) & 0xFF);
-            byte[] arry = new byte[4];
-            arry[3] = (byte)(lenth & 0xFF);
-            arry[2] = (byte)((lenth & 0xFF00) >> 8);
-            arry[1] = (byte)((lenth & 0xFF0000) >> 16);
-            arry[0] = (byte)((lenth >> 24) & 0xFF);
-            byte[] temp = new byte[9 + nlenth + lenth];
-            temp[0] = tag;
-            narry.CopyTo(temp, 1);
-            arry.CopyTo(temp, 5);
-            user.CopyTo(temp, 9);
-            body.CopyTo(temp, 9 + nlenth);
-            return temp;
+            byte[] data=System.Text.Encoding.UTF8.GetBytes(pData);
+            byte pDataType = MyConfig.PROTOCOL_HEAD_TYPE_JSON;
+            byte[] msg = bulidMsg(pDataType, pReqType, pHasToken, pToken, data);
+            return msg;
         }
-        public byte[] enImg(byte ptag, String username, byte[] data)
+
+        public byte[] enImg(byte pReqType, byte pHasToken,String pToken, byte[] pData)
         {
-            byte[] user = System.Text.Encoding.UTF8.GetBytes(username);
+            byte[] data = pData;
+            byte pDataType = MyConfig.PROTOCOL_HEAD_TYPE_IMG;
+            byte[] msg = bulidMsg(pDataType, pReqType, pHasToken , pToken, data);
+            return msg;
+        }
 
-            Int32 lenth = data.Length;
-            Int32 nlenth = user.Length;
-            byte[] temp = new byte[9 + nlenth + lenth];
-            byte[] narry = new byte[4];
-            narry[3] = (byte)(nlenth & 0xFF);
-            narry[2] = (byte)((nlenth & 0xFF00) >> 8);
-            narry[1] = (byte)((nlenth & 0xFF0000) >> 16);
-            narry[0] = (byte)((nlenth >> 24) & 0xFF);
-            byte[] arry = new byte[4];
-            arry[3] = (byte)(lenth & 0xFF);
-            arry[2] = (byte)((lenth & 0xFF00) >> 8);
-            arry[1] = (byte)((lenth & 0xFF0000) >> 16);
-            arry[0] = (byte)((lenth >> 24) & 0xFF);
+        private byte[] bulidMsg(byte pDataType,byte pReqType, byte pHasToken,String pToken, byte[] pData)
+        {
+            byte[] tokentemp = System.Text.Encoding.UTF8.GetBytes(pToken);
+            byte[] token = new byte[MyConfig.PROTOCOL_HEAD_SIZE_TOKEN];
+            tokentemp.CopyTo(token, 0);
+            byte reqType = pReqType;
+            Int32 intDataLen = pData.Length;
 
-            temp[0] = ptag;
-            narry.CopyTo(temp, 1);
-            arry.CopyTo(temp, 5);
-            user.CopyTo(temp, 9);
-            data.CopyTo(temp, 9 + nlenth);
+            byte[] bDataLen = new byte[4];
+            bDataLen[3] = (byte)(intDataLen & 0xFF);
+            bDataLen[2] = (byte)((intDataLen & 0xFF00) >> 8);
+            bDataLen[1] = (byte)((intDataLen & 0xFF0000) >> 16);
+            bDataLen[0] = (byte)((intDataLen >> 24) & 0xFF);
+            byte[] temp = new byte[MyConfig.INT_PACKAGE_HEAD_LEN+intDataLen];
+
+            temp[MyConfig.PROTOCOL_HEAD_POS_FLAG] = MyConfig.PROTOCOL_HEAD_FLAG;
+            temp[MyConfig.PROTOCOL_HEAD_POS_TOKENTYPE] = pHasToken;
+            temp[MyConfig.PROTOCOL_HEAD_POS_DATATYPE] = pDataType;
+            temp[MyConfig.PROTOCOL_HEAD_POS_REQTYPE] = pReqType;
+            token.CopyTo(temp, MyConfig.PROTOCOL_HEAD_POS_TOKEN);
+            bDataLen.CopyTo(temp, MyConfig.PROTOCOL_HEAD_POS_DATALEN);
+            bDataLen.CopyTo(temp, MyConfig.PROTOCOL_HEAD_POS_RESERVE);//预留位不解析。
+            pData.CopyTo(temp, MyConfig.INT_PACKAGE_HEAD_LEN);
             return temp;
         }
     }

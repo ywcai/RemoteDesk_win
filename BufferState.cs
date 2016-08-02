@@ -49,7 +49,7 @@ namespace ywcai.util.buf
             remaining = 0;//这次数据全都被读取，因此设置为0
             //target = 0;目标长度，因为下一次没报头，所以target保持不变
             bufPos = 0 ;//重新接收数据，因此bufPos置为0
-           // Console.WriteLine("connect: e " + this.toString());
+           // Console.WriteLine("connect: e " + this.toString());包数据有问题,丢弃这个包，等待新
         }
         public void drop()
         {
