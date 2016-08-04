@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace ywcai.util.compress
+namespace ywcai.util.hfman
 {
     class HfmanTree
     {

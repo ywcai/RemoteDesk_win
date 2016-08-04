@@ -9,6 +9,7 @@ namespace ywcai.core.veiw
 {
     partial class RemoteDesk
     {
+        private DeskForm deskForm;
         private MySocket mySocket = MySocket.GetInstance();
         private delegate void UiEventsHandler(String mes, Int32 method); //普通UI更新委托
         private delegate void DeskEventsHandler(Bitmap img); //持续渲染屏幕
@@ -34,9 +35,10 @@ namespace ywcai.core.veiw
         }
         private void draw(Bitmap img)
         {
-            deskTop.Width = img.Width;
-            deskTop.Height = img.Height;
-            deskTop.Image = img;
+            if(deskForm!=null)
+            { 
+            deskForm.draw(img);
+            }
         }
         //信息显示委托
         private void showInfo(Object pMes, Int32 method)
@@ -65,7 +67,6 @@ namespace ywcai.core.veiw
                 case MyConfig.INT_UPDATEUI_TXBOX:
                     infoLabel.Text = mes;
                     break;
-
                 case MyConfig.INT_CREATE_DESK_CONTAINER:
                     addDesk();
                     break;
@@ -75,15 +76,24 @@ namespace ywcai.core.veiw
                 case MyConfig.INT_INIT_CLIENT_LIST:
                     initRemoteLists(mes);
                     break;
-                //case MyConfig.INT_UPDATEUI_TURN_OFF:
-                //    turnOffLine(mes);
-                //    break;
+                case MyConfig.INT_CHANGE_OUT:
+                    turnOffLine();
+                    break;
 
                 default:
                     //do nothing;
                     break;
             }
         }
+
+        private void turnOffLine()
+        {
+            ctrlCenter.isCtrl = false;
+            ctrlCenter.isLogining = false;
+            removeDesk();
+            clearListItems();
+        }
+
         private void initRemoteLists(String mes)
         {
             String[] list = mes.Split('|');
@@ -120,6 +130,8 @@ namespace ywcai.core.veiw
             listbox_clients.Items[0].SubItems[0].PersonalMsg = "0.0.0.0";
             listbox_clients.Items[0].SubItems[0].IpAddress= "0.0.0.0";
             listbox_clients.Items[0].SubItems[0].NicName = "0" ;
+            listbox_clients.Items[0].SubItems[0].Tag= "0";
+            listbox_clients.Items[0].SubItems[0].IsVip = false;
             if (listbox_clients.Items[1].SubItems.Count != 0)
             { 
             listbox_clients.Items[1].SubItems.Clear();
@@ -175,37 +187,24 @@ namespace ywcai.core.veiw
 
         private void addDesk()
         {
-            deskTop.Dock = DockStyle.Left | DockStyle.Top;
-            panel.BackColor = Color.AliceBlue;
-            this.Controls.Add(panel);
-            panel.BringToFront();
-            setMaxScreen();
+            deskForm = new DeskForm(ctrlCenter);
+            deskForm.Show();
+            deskForm.setFullScreen();
+            //deskTop.Dock = DockStyle.Left | DockStyle.Top;
+            //panel.BackColor = Color.AliceBlue;
+            //this.Controls.Add(panel);
+            //panel.BringToFront();
+            //setMaxScreen();
         }
         private void removeDesk()
         {
-            this.Controls.Remove(panel);
-            setNormalScreen();
+            //this.Controls.Remove(panel);
+            if(!deskForm.IsNull())
+            { 
+            deskForm.Close();
+            }
+            //setNormalScreen();
         }
-        private void setMaxScreen()
-        {
-            this.FormBorderStyle = FormBorderStyle.None;
-            this.WindowState = FormWindowState.Maximized;
-            //this.menu.Visible = true;
-            //this.menu.BringToFront();
-            //this.menu.Top = -this.menu.Height + 1;
-           // this.menu.MouseHover += showMenu;
-        }
-        private void setNormalScreen()
-        {
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-            this.WindowState = FormWindowState.Normal;
-            //this.menu.Visible = false;
-        }
-        private void setMinScreen()
-        {
-            //this.FormBorderStyle = FormBorderStyle.FixedSingle;
-            this.WindowState = FormWindowState.Minimized;
-            //this.menu.Visible = false;
-        }
+
     }
 }

@@ -36,9 +36,8 @@ namespace ywcai.core.veiw
             CCWin.SkinControl.ChatListSubItem chatListSubItem1 = new CCWin.SkinControl.ChatListSubItem();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteDesk));
             CCWin.SkinControl.ChatListItem chatListItem2 = new CCWin.SkinControl.ChatListItem();
+            CCWin.SkinControl.ChatListItem chatListItem3 = new CCWin.SkinControl.ChatListItem();
             this.listbox_clients = new CCWin.SkinControl.ChatListBox();
-            this.panel = new System.Windows.Forms.Panel();
-            this.deskTop = new System.Windows.Forms.PictureBox();
             this.statusPanel = new CCWin.SkinControl.SkinPanel();
             this.skinLabel3 = new CCWin.SkinControl.SkinLabel();
             this.skinLabel2 = new CCWin.SkinControl.SkinLabel();
@@ -55,8 +54,6 @@ namespace ywcai.core.veiw
             this.menu_login = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_loginout = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_close = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.deskTop)).BeginInit();
             this.statusPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.userPic)).BeginInit();
             this.infoPanel.SuspendLayout();
@@ -98,17 +95,24 @@ namespace ywcai.core.veiw
             chatListItem1.SubItems.AddRange(new CCWin.SkinControl.ChatListSubItem[] {
             chatListSubItem1});
             chatListItem1.Tag = null;
-            chatListItem1.Text = "本机设备信息";
+            chatListItem1.Text = "本机信息";
             chatListItem1.TwinkleSubItemNumber = 0;
             chatListItem2.Bounds = new System.Drawing.Rectangle(0, 55, 300, 25);
             chatListItem2.IsTwinkleHide = false;
             chatListItem2.OwnerChatListBox = this.listbox_clients;
             chatListItem2.Tag = null;
-            chatListItem2.Text = "远端设备列表";
+            chatListItem2.Text = "远端设备";
             chatListItem2.TwinkleSubItemNumber = 0;
+            chatListItem3.Bounds = new System.Drawing.Rectangle(0, 81, 300, 25);
+            chatListItem3.IsTwinkleHide = false;
+            chatListItem3.OwnerChatListBox = this.listbox_clients;
+            chatListItem3.Tag = null;
+            chatListItem3.Text = "局域网设备";
+            chatListItem3.TwinkleSubItemNumber = 0;
             this.listbox_clients.Items.AddRange(new CCWin.SkinControl.ChatListItem[] {
             chatListItem1,
-            chatListItem2});
+            chatListItem2,
+            chatListItem3});
             this.listbox_clients.ListSubItemMenu = null;
             this.listbox_clients.Location = new System.Drawing.Point(0, 111);
             this.listbox_clients.Margin = new System.Windows.Forms.Padding(0);
@@ -118,29 +122,6 @@ namespace ywcai.core.veiw
             this.listbox_clients.SubItemMenu = null;
             this.listbox_clients.TabIndex = 25;
             this.listbox_clients.DoubleClickSubItem += new CCWin.SkinControl.ChatListBox.ChatListEventHandler(this.listbox_clients_DoubleClickSubItem);
-            // 
-            // panel
-            // 
-            this.panel.AutoScroll = true;
-            this.panel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(128)))), ((int)(((byte)(255)))));
-            this.panel.Controls.Add(this.deskTop);
-            this.panel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel.Location = new System.Drawing.Point(0, 0);
-            this.panel.Margin = new System.Windows.Forms.Padding(0);
-            this.panel.Name = "panel";
-            this.panel.Padding = new System.Windows.Forms.Padding(10);
-            this.panel.Size = new System.Drawing.Size(677, 365);
-            this.panel.TabIndex = 19;
-            // 
-            // deskTop
-            // 
-            this.deskTop.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.deskTop.Location = new System.Drawing.Point(10, 10);
-            this.deskTop.Margin = new System.Windows.Forms.Padding(0);
-            this.deskTop.Name = "deskTop";
-            this.deskTop.Size = new System.Drawing.Size(657, 345);
-            this.deskTop.TabIndex = 0;
-            this.deskTop.TabStop = false;
             // 
             // statusPanel
             // 
@@ -270,7 +251,7 @@ namespace ywcai.core.veiw
             this.userPic.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.userPic.BackColor = System.Drawing.Color.Transparent;
             this.userPic.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
-            this.userPic.Image = ((System.Drawing.Image)(resources.GetObject("userPic.Image")));
+            this.userPic.Image = global::ywcai.core.veiw.Properties.Resources.head;
             this.userPic.Location = new System.Drawing.Point(5, 16);
             this.userPic.Margin = new System.Windows.Forms.Padding(0);
             this.userPic.Name = "userPic";
@@ -402,6 +383,7 @@ namespace ywcai.core.veiw
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.ICoOffset = new System.Drawing.Point(5, 0);
             this.InnerBorderColor = System.Drawing.Color.Transparent;
+            this.Location = new System.Drawing.Point(1000, 100);
             this.MaximizeBox = false;
             this.MaximumSize = new System.Drawing.Size(447, 600);
             this.MaxSize = new System.Drawing.Size(20, 20);
@@ -421,11 +403,9 @@ namespace ywcai.core.veiw
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
             this.Special = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.Text = "RmoteDesk";
             this.TitleColor = System.Drawing.Color.White;
-            this.panel.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.deskTop)).EndInit();
             this.statusPanel.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.userPic)).EndInit();
             this.infoPanel.ResumeLayout(false);
@@ -438,8 +418,6 @@ namespace ywcai.core.veiw
   
 
         #endregion
-        private System.Windows.Forms.Panel panel;
-        private System.Windows.Forms.PictureBox deskTop;
         private CCWin.SkinControl.SkinPanel statusPanel;
         private CCWin.SkinControl.SkinPictureBox userPic;
         private CCWin.SkinControl.SkinPanel infoPanel;

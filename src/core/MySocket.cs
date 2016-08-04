@@ -64,16 +64,17 @@ namespace ywcai.core.sokcet
         }
         public void disConnect()
         {
+            updateInfo("中断连接，重置UI", MyConfig.INT_CHANGE_OUT);
             if (!isConn)
             {
-                updateInfo("已退出登录", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("Sokect已断开", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
             try
             {
                 client.Close();
                 isConn = false;
-                updateInfo("退出登录成功", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("Sokect连接断开成功", MyConfig.INT_UPDATEUI_TXBOX);
             }
             catch (Exception)
             {
@@ -106,7 +107,7 @@ namespace ywcai.core.sokcet
             catch
             {
                 disConnect();
-                updateInfo("发送数据异常，退出线程", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("发送数据异常，退出Socket连接", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
         }
@@ -132,7 +133,6 @@ namespace ywcai.core.sokcet
                 try
                 {
                     //Console.WriteLine("开始接收数据，");
-
                     bufState.remaining = client.Receive(bufState.buf);
                     //Console.WriteLine("接收数据完成");
                     //Console.WriteLine("remaining: "+bufState.remaining);
@@ -140,9 +140,8 @@ namespace ywcai.core.sokcet
                 }
                 catch
                 {
-                    //disConnect();
-                    //Console.WriteLine("接收数据异常，已退出线程");
-                    updateInfo("接收数据异常，已退出线程", MyConfig.INT_UPDATEUI_TXBOX);
+                    disConnect();
+                    updateInfo("接收数据异常，退出Socket连接", MyConfig.INT_UPDATEUI_TXBOX);
                     bufState.init();
                     return;
                 }

@@ -311,8 +311,10 @@
             this.ShowBorder = false;
             this.ShowDrawIcon = false;
             this.ShowIcon = false;
+            this.ShowInTaskbar = false;
             this.SkinOpacity = 0.8D;
             this.Special = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Welcome to use RemoteDesk !";
             this.TitleColor = System.Drawing.Color.White;
             this.TitleOffset = new System.Drawing.Point(5, 0);

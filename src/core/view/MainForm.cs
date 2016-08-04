@@ -8,12 +8,11 @@ namespace ywcai.core.veiw
 
     public partial class RemoteDesk : CCWin.CCSkinMain
     {
-        private Int32 linkNum;
         public RemoteDesk(String username, String token)
         {
             InitializeComponent();
             registerDelegate();
-            registerDeskListener();
+            //初始化本端设备信息
             this.lable_username.Text = username;
             this.label_token.Text = token;
             this.label_nickname.Text = Environment.MachineName;
@@ -21,6 +20,7 @@ namespace ywcai.core.veiw
             listbox_clients.Items[0].SubItems[0].DisplayName = label_nickname.Text;
             listbox_clients.Items[0].SubItems[0].PlatformTypes = PlatformType.PC;
             listbox_clients.Items[0].SubItems[0].Status = ChatListSubItem.UserStatus.OffLine;
+
             doLogin();
         }
 
@@ -47,11 +47,29 @@ namespace ywcai.core.veiw
 
         private void listbox_clients_DoubleClickSubItem(object sender, ChatListEventArgs e, MouseEventArgs es)
         {
-            linkNum = Int32.Parse(e.SelectSubItem.Tag.ToString());
-            //print("远程连接"+e.SelectSubItem.Tag.ToString(), MyConfig.INT_UPDATEUI_TXBOX);
-            if (e.SelectSubItem.NicName.Equals(label_nickname.Text))
+            if (listbox_clients.Items[0].SubItems[0].Status== ChatListSubItem.UserStatus.OffLine)
             {
-                showInfo("你不能连接自己所在的终端", MyConfig.INT_UPDATEUI_TXBOX);
+                showInfo("你处于离线状态", MyConfig.INT_UPDATEUI_TXBOX);
+                return;
+            }
+            if (listbox_clients.Items[0].SubItems[0].IsVip)
+            {
+                showInfo("你处于远程控制状态", MyConfig.INT_UPDATEUI_TXBOX);
+                return;
+            }
+            if (e.SelectSubItem.DisplayName.Equals(label_nickname.Text))
+            {
+                showInfo("设备不能连接自身", MyConfig.INT_UPDATEUI_TXBOX);
+                //return;
+            }
+            if (e.SelectSubItem.Status==ChatListSubItem.UserStatus.OffLine)
+            {
+                showInfo("你连接的远端设备不在线", MyConfig.INT_UPDATEUI_TXBOX);
+                return;
+            }
+            if (e.SelectSubItem.IsVip)
+            {
+                showInfo("你连接的远端设备处于控制状态", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
             connect(e.SelectSubItem.Tag.ToString());

@@ -63,19 +63,9 @@ namespace ywcai.core.veiw.Properties {
         /// <summary>
         ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
-        internal static System.Drawing.Bitmap Jellyfish {
+        internal static System.Drawing.Bitmap head {
             get {
-                object obj = ResourceManager.GetObject("Jellyfish", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
-        /// </summary>
-        internal static System.Drawing.Bitmap Tulips {
-            get {
-                object obj = ResourceManager.GetObject("Tulips", resourceCulture);
+                object obj = ResourceManager.GetObject("head", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

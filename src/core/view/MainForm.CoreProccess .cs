@@ -33,14 +33,7 @@ namespace ywcai.core.veiw
                 showInfo("已经进行远程控制", MyConfig.INT_UPDATEUI_TXBOX);
                 return;
             }
-            //if (list_clients.SelectedItems.Count <= 0)
-            //{
-            //    showInfo("需要先选定要连接的主机", MyConfig.INT_UPDATEUI_TXBOX);
-            //    return;
-            //}
-            //Int32 index = list_clients.SelectedIndices[0];
-            //String order = list_clients.Items[index].Tag.ToString();
-            showInfo("正在连接远端桌面", MyConfig.INT_UPDATEUI_TXBOX);
+            showInfo("正在连接远端桌面......", MyConfig.INT_UPDATEUI_TXBOX);
             ctrlCenter.createLink(index.ToString());
         }
 

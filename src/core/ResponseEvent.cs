@@ -63,7 +63,7 @@ namespace ywcai.core.control
         private static void leftDown()
         {
             mouse_event((Int32)MouseEventFlag.LeftDown , 0, 0, 0, 0);
-            Console.WriteLine("LeftDown ");
+            Console.WriteLine("LeftDown");
         }
         private static void rightDown()
         {

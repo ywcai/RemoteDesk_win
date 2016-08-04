@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace ywcai.util.compress
+namespace ywcai.util.hfman
 {
     class  Node
     {
