@@ -30,28 +30,27 @@ namespace ywcai.core.control
         public  static void exeEvent(String cmd)
         {
             String[] query = cmd.Split(',');
+            String[] pos = query[1].Split(':');
+            Int32 x = Int32.Parse(pos[0]);
+            Int32 y = Int32.Parse(pos[1]);
             switch (query[0])
             {
                 case MyConfig.MOUSE_LEFT_UP:
-                    leftUp();
+                    leftUp(x, y);
                     break;
                 case MyConfig.MOUSE_RIGHT_UP:
-                    rightUp();
+                    rightUp(x, y);
                     break;
                 case MyConfig.MOUSE_LEFT_DOWN:
-                    leftDown();
+                    leftDown(x, y);
                     break;
                 case MyConfig.MOUSE_RIGHT_DOWN:
-                    rightDown();
+                    rightDown(x, y);
                     break;
                 case MyConfig.MOUSE_MID_SCROLL:
-                    Int32 z = Int32.Parse(query[1]);
-                    wheelScroll(z);
+                    wheelScroll(x);
                     break;
                 case MyConfig.MOUSE_MOVE:
-                    String[] pos = query[1].Split(':');
-                    Int32  x = Int32.Parse(pos[0]);
-                    Int32  y = Int32.Parse(pos[1]);
                     move(x,y);
                     break;
                 default:
@@ -60,29 +59,30 @@ namespace ywcai.core.control
             }
         }
 
-        private static void leftDown()
+        private static void leftDown(int x, int y)
         {
             mouse_event((Int32)MouseEventFlag.LeftDown , 0, 0, 0, 0);
-            Console.WriteLine("LeftDown");
+
         }
-        private static void rightDown()
+        private static void rightDown(int x, int y)
         {
             mouse_event((Int32)MouseEventFlag.RightDown, 0, 0, 0, 0);
-            Console.WriteLine("RightDown ");
+     
         }
-        private static void leftUp()
+        private static void leftUp(int x, int y)
         {
-            mouse_event((Int32)MouseEventFlag.LeftUp , 0, 0, 0, 0);
-            Console.WriteLine("LeftUp ");
+            mouse_event((Int32)MouseEventFlag.LeftUp, 0, 0, 0, 0);
+         
         }
-        private static void rightUp()
+        private static void rightUp(int x, int y)
         {
-            mouse_event((Int32)MouseEventFlag.RightUp , 0, 0, 0, 0);
-            Console.WriteLine("RightUp ");
+            mouse_event((Int32)MouseEventFlag.RightUp  , 0, 0, 0, 0);
+          
         }
         private static void move(int x, int y)
         {
-            mouse_event((Int32)MouseEventFlag.Move | (Int32)MouseEventFlag.Absolute, x, y, 0, 0);
+            mouse_event((Int32)MouseEventFlag.Move| (Int32)MouseEventFlag.Absolute, x*65535/1366, y * 65535 / 768, 0, 0);
+            //Console.WriteLine(x + ":" + y);
         }
         private static void wheelScroll(int delta)
         {

@@ -31,7 +31,7 @@ namespace ywcai.util.hfman
             }
             return lists[0];
         }
-        public List<Node> initNodes(Int32[] src)
+        private List<Node> initNodes(Int32[] src)
         {
             List<Node> lists = new List<Node>();
             for (Int32 i = 0; i < src.Length; i++)

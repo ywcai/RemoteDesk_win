@@ -17,5 +17,5 @@ E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.pdb
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.LoginForm.resources
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.Properties.Resources.resources
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.RemoteDesk.resources
-E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache
 E:\workspace\CshapeProject\RemoteDesk\obj\Debug\ywcai.core.veiw.DeskForm.resources
+E:\workspace\CshapeProject\RemoteDesk\obj\Debug\RemoteDesk.csprojResolveAssemblyReference.cache

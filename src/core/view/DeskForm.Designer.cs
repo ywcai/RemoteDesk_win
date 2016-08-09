@@ -44,6 +44,7 @@
             // 
             // panel_desk
             // 
+            this.panel_desk.AutoScroll = true;
             this.panel_desk.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(232)))), ((int)(((byte)(245)))), ((int)(((byte)(252)))));
             this.panel_desk.Controls.Add(this.pannel_ctrlmenu);
             this.panel_desk.Controls.Add(this.picbox_desk);

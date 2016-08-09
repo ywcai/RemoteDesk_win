@@ -10,15 +10,39 @@ namespace ywcai.core.veiw
     {
         private ControlCenter ctrl;
         private Boolean menuFlag=true;
+
+        public const int syscommand = 0x112;
+        public const int maxbutton = 0xF030;
         public DeskForm(ControlCenter ctrlbus)
         {
             ctrl = ctrlbus;
             InitializeComponent();
+            this.picbox_desk.MouseWheel +=new MouseEventHandler(picbox_desk_MouseWheel)   ; 
         }
+
+  
+
         protected override void OnClosing(CancelEventArgs e)
         {
             ctrl.disconnectLink();
         }
+        protected override void WndProc(ref Message m)
+        {
+            if(m.Msg==syscommand)
+            {
+                if(m.WParam.ToInt32()==maxbutton)
+                {
+                    this.FormBorderStyle = FormBorderStyle.None;
+                    this.WindowState = FormWindowState.Maximized;
+                    menuFlag = true;
+                    bt_normal.Text = "窗口模式";
+                    return ;
+                }
+            }
+            base.WndProc(ref m);
+        }
+
+
         public void draw(Bitmap img)
         {
             picbox_desk.Width = img.Width;
@@ -73,5 +97,6 @@ namespace ywcai.core.veiw
         {
             ctrl.disconnectLink();
         }
+
     }
 }

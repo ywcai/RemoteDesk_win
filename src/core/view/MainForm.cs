@@ -2,6 +2,7 @@
 using System;
 using System.Windows.Forms;
 using ywcai.global.config;
+using ywcai.util.draw;
 
 namespace ywcai.core.veiw
 {
@@ -73,6 +74,12 @@ namespace ywcai.core.veiw
                 return;
             }
             connect(e.SelectSubItem.Tag.ToString());
+        }
+
+        private void userPic_Click(object sender, EventArgs e)
+        {
+            CatchScreen cs = new CatchScreen();
+            cs.getImgs();
         }
     }
 }

@@ -171,7 +171,7 @@
             this.tx_psw.IsPasswordChat = '●';
             this.tx_psw.IsSystemPasswordChar = true;
             this.tx_psw.Lines = new string[] {
-        "111111"};
+        "1234567890123"};
             this.tx_psw.Location = new System.Drawing.Point(112, 63);
             this.tx_psw.Margin = new System.Windows.Forms.Padding(0);
             this.tx_psw.MaxLength = 20;
@@ -197,13 +197,13 @@
             this.tx_psw.SkinTxt.PasswordChar = '●';
             this.tx_psw.SkinTxt.Size = new System.Drawing.Size(175, 18);
             this.tx_psw.SkinTxt.TabIndex = 0;
-            this.tx_psw.SkinTxt.Text = "111111";
+            this.tx_psw.SkinTxt.Text = "1234567890123";
             this.tx_psw.SkinTxt.UseSystemPasswordChar = true;
             this.tx_psw.SkinTxt.WaterColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(127)))), ((int)(((byte)(127)))));
             this.tx_psw.SkinTxt.WaterText = "";
             this.tx_psw.SkinTxt.WordWrap = false;
             this.tx_psw.TabIndex = 1;
-            this.tx_psw.Text = "111111";
+            this.tx_psw.Text = "1234567890123";
             this.tx_psw.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
             this.tx_psw.WaterColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(127)))), ((int)(((byte)(127)))));
             this.tx_psw.WaterText = "";
@@ -230,7 +230,8 @@
             this.tx_username.IconMouseState = CCWin.SkinClass.ControlState.Normal;
             this.tx_username.IsPasswordChat = '\0';
             this.tx_username.IsSystemPasswordChar = false;
-            this.tx_username.Lines = new string[0];
+            this.tx_username.Lines = new string[] {
+        "12345678"};
             this.tx_username.Location = new System.Drawing.Point(112, 13);
             this.tx_username.Margin = new System.Windows.Forms.Padding(0);
             this.tx_username.MaxLength = 20;
@@ -255,10 +256,12 @@
             this.tx_username.SkinTxt.Name = "BaseText";
             this.tx_username.SkinTxt.Size = new System.Drawing.Size(175, 18);
             this.tx_username.SkinTxt.TabIndex = 0;
+            this.tx_username.SkinTxt.Text = "12345678";
             this.tx_username.SkinTxt.WaterColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(127)))), ((int)(((byte)(127)))));
             this.tx_username.SkinTxt.WaterText = "";
             this.tx_username.SkinTxt.WordWrap = false;
             this.tx_username.TabIndex = 0;
+            this.tx_username.Text = "12345678";
             this.tx_username.TextAlign = System.Windows.Forms.HorizontalAlignment.Left;
             this.tx_username.WaterColor = System.Drawing.Color.FromArgb(((int)(((byte)(127)))), ((int)(((byte)(127)))), ((int)(((byte)(127)))));
             this.tx_username.WaterText = "";
@@ -272,7 +275,7 @@
             this.bar_loading.CircleSize = 0.6F;
             this.bar_loading.Font = new System.Drawing.Font("微软雅黑", 10.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.bar_loading.ForeColor = System.Drawing.Color.White;
-            this.bar_loading.Location = new System.Drawing.Point(167, 29);
+            this.bar_loading.Location = new System.Drawing.Point(179, 29);
             this.bar_loading.Margin = new System.Windows.Forms.Padding(0);
             this.bar_loading.Name = "bar_loading";
             this.bar_loading.Percentage = 0F;

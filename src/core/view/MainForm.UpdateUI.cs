@@ -109,6 +109,7 @@ namespace ywcai.core.veiw
                 Boolean isOnline = str[2].Equals("true") ? true : false;
                 Boolean isVip = str[3].Equals("true") ? true : false;
                 ChatListSubItem newClient = new ChatListSubItem();
+                newClient.HeadImage = global::ywcai.core.veiw.Properties.Resources.remote;
                 newClient.DisplayName = displayname;
                 newClient.NicName = tag;
                 newClient.Tag = tag;
@@ -173,6 +174,7 @@ namespace ywcai.core.veiw
                 }
             }
             ChatListSubItem  newClient= new ChatListSubItem();
+            newClient.HeadImage=global::ywcai.core.veiw.Properties.Resources.remote;
             newClient.DisplayName = displayname;
             newClient.NicName = tag;
             newClient.Tag = tag;

@@ -7,16 +7,32 @@ namespace ywcai.core.veiw
     public partial class LoginForm : CCWin.CCSkinMain
     {
         private delegate void UiHandler(Int32 method,String msg); //普通UI更新委托
-
+        private Boolean isAutoLogin = false;
 
         public LoginForm()
         {
             InitializeComponent();
+            //读取配置配件；
+            if(isAutoLogin)
+            {
+                login();
+            }
         }
 
         private void bt_login_Click(object sender, System.EventArgs e)
         {
-            
+            login();
+        }
+        private void login()
+        {
+            if(checkbox_autologin.Checked)
+            {
+                //设置自动登录配置;
+            }
+            if (checkbox_readpsw.Checked)
+            {
+                //设置记录密码配置;
+            }
             if (checkNormal())
             {
                 label_errinfo.Text = "";

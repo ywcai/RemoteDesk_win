@@ -8,7 +8,8 @@ namespace ywcai.util.draw
 [Serializable]
     class ImgEntity
     {
-        public Int32 posX, posY, width, height;
+        public short posX, posY,width, height;
+        public Int32 realLenth;
         public byte[] body;
     }
 }

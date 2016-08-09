@@ -58,11 +58,11 @@
 
         //图片差分的数量
         public const int INT_BLOCK_X_COUNT = 10;
-        public const int INT_BLOCK_Y_COUNT = 9;
+        public const int INT_BLOCK_Y_COUNT = 10;
         //图片压缩的质量
-        public const long INT_DESKTOP_QA = 100L;
-        public const int INT_DESKTOP_REFLUSH_FREQUENCY_HIGHT = 100;//数据传输帧率，每秒，高频
-        public const int INT_DESKTOP_REFLUSH_FREQUENCY_NORMAL = 200;//数据传输帧率，每秒，普通
+        public const long INT_DESKTOP_QA = 50L;
+        public const int INT_DESKTOP_REFLUSH_FREQUENCY_HIGHT = 200;//数据传输帧率，每秒，高频
+        public const int INT_DESKTOP_REFLUSH_FREQUENCY_NORMAL = 400;//数据传输帧率，每秒，普通
         public const int INT_DESKTOP_REFLUSH_FREQUENCY_LOW=500;//数据传输帧率，每秒，低频
         public const int INT_DESKTOP_REFLUSH_FREQUENCY_SLEEP = 1000;//数据传输帧率，每秒，休眠
 

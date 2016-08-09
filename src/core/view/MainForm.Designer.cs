@@ -34,9 +34,9 @@ namespace ywcai.core.veiw
             this.components = new System.ComponentModel.Container();
             CCWin.SkinControl.ChatListItem chatListItem1 = new CCWin.SkinControl.ChatListItem();
             CCWin.SkinControl.ChatListSubItem chatListSubItem1 = new CCWin.SkinControl.ChatListSubItem();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteDesk));
             CCWin.SkinControl.ChatListItem chatListItem2 = new CCWin.SkinControl.ChatListItem();
             CCWin.SkinControl.ChatListItem chatListItem3 = new CCWin.SkinControl.ChatListItem();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteDesk));
             this.listbox_clients = new CCWin.SkinControl.ChatListBox();
             this.statusPanel = new CCWin.SkinControl.SkinPanel();
             this.skinLabel3 = new CCWin.SkinControl.SkinLabel();
@@ -76,7 +76,7 @@ namespace ywcai.core.veiw
             chatListItem1.OwnerChatListBox = this.listbox_clients;
             chatListSubItem1.Bounds = new System.Drawing.Rectangle(0, 27, 300, 27);
             chatListSubItem1.DisplayName = "null";
-            chatListSubItem1.HeadImage = ((System.Drawing.Image)(resources.GetObject("chatListSubItem1.HeadImage")));
+            chatListSubItem1.HeadImage = global::ywcai.core.veiw.Properties.Resources.local;
             chatListSubItem1.HeadRect = new System.Drawing.Rectangle(5, 30, 20, 20);
             chatListSubItem1.ID = ((uint)(0u));
             chatListSubItem1.IpAddress = null;
@@ -259,6 +259,7 @@ namespace ywcai.core.veiw
             this.userPic.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.userPic.TabIndex = 0;
             this.userPic.TabStop = false;
+            this.userPic.Click += new System.EventHandler(this.userPic_Click);
             // 
             // infoPanel
             // 

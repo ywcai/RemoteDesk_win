@@ -170,9 +170,14 @@
       <Install>true</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="Resources\head.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\local.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\remote.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

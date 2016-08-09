@@ -8,7 +8,7 @@ namespace ywcai.core.veiw
     {
         private void picbox_desk_MouseDown(object sender, System.Windows.Forms.MouseEventArgs e)
         {
-            String cmd = "0-0-0";
+            String cmd = "";
             if (e.Button.ToString().Equals("Left"))
             {
                 cmd = MyConfig.MOUSE_LEFT_DOWN;
@@ -17,7 +17,7 @@ namespace ywcai.core.veiw
             {
                 cmd = MyConfig.MOUSE_RIGHT_DOWN;
             }
-
+            cmd = cmd + "," + e.X + ":" + e.Y;
             sendEvent(cmd);
         }
         private void picbox_desk_MouseMove(object sender, System.Windows.Forms.MouseEventArgs e)
@@ -41,9 +41,17 @@ namespace ywcai.core.veiw
             {
                 cmd = MyConfig.MOUSE_RIGHT_UP;
             }
-
+            cmd = cmd + "," + e.X + ":" + e.Y;
             sendEvent(cmd);
         }
+
+        private void picbox_desk_MouseWheel(object sender, MouseEventArgs e)
+        {
+            String cmd = MyConfig.MOUSE_MID_SCROLL+","+e.Delta+":0";
+            sendEvent(cmd);
+        }
+
+
         private void sendEvent(String cmd)
         {
             ctrl.sendCmd(cmd);

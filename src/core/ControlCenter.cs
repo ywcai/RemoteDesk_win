@@ -19,9 +19,8 @@ namespace ywcai.core.control
         private MySocket mySocket = null;
         private Thread desksentThread = null;
         private String role = "normal";
-        private BinaryFormatter bf = new BinaryFormatter();
-        private ImgRecovery ir = new ImgRecovery();
         private Object _lock = new Object();
+        private ImgRecovery ir = new ImgRecovery();
         public ControlCenter()
         {
             if (mySocket == null)
@@ -263,8 +262,10 @@ namespace ywcai.core.control
         {
             //反序列化
             Bitmap deskImg = null;
+
             using (MemoryStream ms = new MemoryStream(deskTop))
             {
+                BinaryFormatter bf = new BinaryFormatter();
                 List<ImgEntity> imgs = (List<ImgEntity>)bf.Deserialize(ms);
                 deskImg = ir.recovery(imgs);
             }
@@ -289,17 +290,21 @@ namespace ywcai.core.control
 
         public void sendDesktop()
         {
-            List<ImgEntity> deskList = null;
+
+
             CatchScreen cs = new CatchScreen();
-            List<ImgEntity> changes = null;
             ImgCompara imgCompara = new ImgCompara();
             //新开线程处理被控端的桌面数据;
             while (isCtrl && isLogining && mySocket.isConn)
             {
-                deskList = cs.getImgs();
-                changes = imgCompara.compara(deskList);
+                //TimeSpan ts1 = new TimeSpan(DateTime.Now.Ticks);       
+                List<ImgEntity> deskList = cs.getImgs();
+                List<ImgEntity> changes = imgCompara.compress(deskList);
+
                 if (changes.Count > 0)
                 {
+                    //TimeSpan ts2 = new TimeSpan(DateTime.Now.Ticks)
+                    //Console.WriteLine("chang count = " + changes.Count);
                     using (MemoryStream ms = new MemoryStream())
                     {
                         BinaryFormatter bf = new BinaryFormatter();
@@ -307,8 +312,8 @@ namespace ywcai.core.control
                         Byte[] imgBuffer = new Byte[ms.Length];
                         ms.Seek(0, SeekOrigin.Begin);
                         ms.Read(imgBuffer, 0, (Int32)ms.Length);
+                        Console.WriteLine("send lenth = " + imgBuffer.Length);
                         mySocket.sent((byte)MyConfig.REQ_TYPE_DESKTOP_SWITCH, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, imgBuffer);
-                        //Console.WriteLine(ms.Length);
                     }
                     if (changes.Count >= (MyConfig.INT_BLOCK_X_COUNT * MyConfig.INT_BLOCK_Y_COUNT * 2 / 3))
                     {
@@ -332,7 +337,7 @@ namespace ywcai.core.control
                     Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_SLEEP);
                 }
             }
-           // Console.WriteLine("退出数据发送, isctrl:" + isCtrl + " isLogin:" + isLogining + " isconn:" + mySocket.isConn);
+            // Console.WriteLine("退出数据发送, isctrl:" + isCtrl + " isLogin:" + isLogining + " isconn:" + mySocket.isConn);
         }
     }
 }
