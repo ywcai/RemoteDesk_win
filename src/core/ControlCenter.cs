@@ -1,343 +1,323 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Net.Sockets;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
-using ywcai.core.sokcet;
+using ywcai.core.veiw.src.config;
+using ywcai.core.veiw.src.util;
 using ywcai.global.config;
+using ywcai.normal.socket;
 using ywcai.util.draw;
+using ywcai.core.veiw.src.core;
 
 namespace ywcai.core.control
 {
-    public class ControlCenter : BothClientInf, MasterInf, SlaveInf
+    public class ControlCenter
     {
+        private String myPsw;
         public event Action<Object, Int32> updateInfo;
         public event Action<Bitmap> updateDesk;
-        public Boolean isLogining = false;
-        public Boolean isCtrl = false;
-        private MySocket mySocket = null;
-        private Thread desksentThread = null;
-        private String role = "normal";
-        private Object _lock = new Object();
-        private ImgRecovery ir = new ImgRecovery();
+        private LSocket mySocket;
+        public Dictionary<String, WorkSocket> sessions = new Dictionary<String, WorkSocket>();
+        private int deskWidth=600,deskHeight=1000;
+        private int serverWorkStatus=MyConfig.SERVER_WORK_STATUS_FREE;
+        private String activeId="";
+        private WorkSocket activeSocket=null;
+
         public ControlCenter()
         {
-            if (mySocket == null)
-            {
-                lock (_lock)
-                {
-                    mySocket = MySocket.GetInstance();
-                    mySocket.coreProccessing += dataProccess;
-                }
-            }
+            mySocket = new LSocket();
+            mySocket.healthCheckTime = 5000;
+            mySocket.ServerStart += socket_ServerStart;
+            mySocket.AcceptClient += mySocket_AcceptClient;
+            mySocket.sessionClosed += socket_sessionClosed;
+            mySocket.ReceiveMessage += socket_ReceiveMessage;
+            mySocket.ErrLog += mySocket_ErrLog;
         }
-        //both
-        private void newThread()
+        public void setPsw(String password)
         {
-            Thread thread = new Thread(new ThreadStart(startRecive));
-            thread.IsBackground = true;
-            thread.Start();
-        }
-        private void startRecive()
-        {
-            mySocket.startRecive();
-        }
-        public void dataProccess(byte reqType, string token, byte[] buf)
-        {
-            String msg = "";
-            if (reqType != MyConfig.REQ_TYPE_DESKTOP_SWITCH)
-            {
-                msg = System.Text.Encoding.UTF8.GetString(buf);
-                //Console.WriteLine("revice data is " + msg);
-            }
-            switch (reqType)
-            {
-                case MyConfig.REQ_TYPE_USER_LOGIN_IN:
-                    loginEnd(token, msg);
-                    break;
-                case MyConfig.REQ_TYPE_USER_LOGIN_OUT:
-                    loginOutEnd(msg);
-                    break;
-                case MyConfig.REQ_TYPE_DESK_LINK_OPEN:
-                    createEnd(msg);
-                    break;
-                case MyConfig.REQ_TYPE_DESK_SHOWDOWN:
-                    disconnectEnd(msg);
-                    break;
-                case MyConfig.REQ_TYPE_CONTROL_CMD:
-                    responseCmd(msg);
-                    break;
-                case MyConfig.REQ_TYPE_DESKTOP_SWITCH:
-                    drawDeskTop(buf);
-                    break;
-                case MyConfig.REQ_TYPE_CLIENT_LIST_UPDATE:
-                    updateLists(msg);
-                    break;
-                default:
-                    //do nothing
-                    break;
-            }
+            myPsw = password;
         }
 
-
-
-        public void loginIn(string token, string content)
+        void socket_ServerStart(bool obj)
         {
-            if (!isLogining)
+            if (obj)
             {
-                mySocket.Conn();
-            }
-            if (mySocket.isConn)
-            {
-                mySocket.sent((byte)MyConfig.REQ_TYPE_USER_LOGIN_IN, MyConfig.PROTOCOL_HEAD_NOT_TOKEN, token, content);
-                newThread();
-            }
-        }
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
+                updateInfo("服务端启动成功", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("", MyConfig.INT_SERVER_SUCCESS);
 
-        public void loginOut(string nickname)
-        {
-            if (isLogining)
-            {
-                mySocket.sent((byte)MyConfig.REQ_TYPE_USER_LOGIN_OUT, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, nickname);
-            }
-        }
-
-        public void updateLists(string lists)
-        {
-            updateInfo(lists, MyConfig.INT_UPDATEUI_LIST);
-        }
-
-
-        public void createLink(string index)
-        {
-            if (!isCtrl)
-            {
-                mySocket.sent((byte)MyConfig.REQ_TYPE_DESK_LINK_OPEN, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, index);
-            }
-        }
-        public void disconnectLink()
-        {
-            if (isCtrl)
-            {
-                mySocket.sent((byte)MyConfig.REQ_TYPE_DESK_SHOWDOWN, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, "disconnect");
-            }
-        }
-        public void loginEnd(string pToken, string result)
-        {
-            if (result.Contains(MyConfig.STR_LOGIN_RESULT_OK))
-            {
-
-                mySocket.token = pToken;
-                isLogining = true;
-                updateInfo("登录成功", MyConfig.INT_UPDATEUI_TXBOX);
-
-                String[] str = result.Split('#');
-                if (str.Length > 0 && !str[1].Equals(""))
-                {
-                    updateInfo(str[1], MyConfig.INT_INIT_CLIENT_LIST);
-                }
-                return;
-            }
-            mySocket.token = "";
-            isLogining = false;
-            mySocket.disConnect();
-            updateInfo("登录验证令牌失败", MyConfig.INT_UPDATEUI_TXBOX);
-        }
-
-        public void loginOutEnd(string result)
-        {
-            if (result.Equals(MyConfig.STR_OUT_RESULT_OK))
-            {
-                //mySocket.token = "";
-                isLogining = false;
-                mySocket.disConnect();
-                updateInfo("离线", MyConfig.INT_CLEAR_LIST);
-                //updateInfo("清除桌面容器", MyConfig.INT_DELETE_DESK_CONTAINER);
-                //disconnectEnd("clear");
-                return;
-            }
-            updateInfo("未能正常退出，是否强制退出系统", MyConfig.INT_UPDATEUI_TXBOX);
-        }
-
-        public void createEnd(string result)
-        {
-            if (result.Contains(MyConfig.STR_OPEN_DESK_MASTER))
-            {
-                isCtrl = true;
-                setMaster();
-                return;
-                //添加鼠标键盘事件;
-                //对PIC容器进行初始化 
-            }
-            if (result.Contains(MyConfig.STR_OPEN_DESK_SLAVE))
-            {
-                isCtrl = true;
-                setSlave();
-                //开始发送桌面数据
-                return;
-            }
-            if (result.Contains(MyConfig.STR_OPEN_DESK_FAIL))
-            {
-                isCtrl = false;
-                updateInfo("创建远程桌面连接失败，设备处于控制状态", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
-            if (result.Contains(MyConfig.STR_OPEN_DESK_FAIL1))
-            {
-                isCtrl = false;
-                updateInfo("创建远程桌面连接失败，不能与自己连接", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
-            isCtrl = false;
-            updateInfo("创建远程桌面连接失败，原因未知 : " + result, MyConfig.INT_UPDATEUI_TXBOX);
-        }
-        private void setMaster()
-        {
-            role = MyConfig.STR_OPEN_DESK_MASTER;
-            updateInfo("连接成功，初始化容器，切换为Master", MyConfig.INT_UPDATEUI_TXBOX);
-            updateInfo("add desk container", MyConfig.INT_CREATE_DESK_CONTAINER);
-        }
-
-        private void setSlave()
-        {
-            //添加对cmd的响应
-            //都是耗时操作，分别开两个线程；
-            role = MyConfig.STR_OPEN_DESK_SLAVE;
-            updateInfo("连接成功，初始化容器，切换为Slave", MyConfig.INT_UPDATEUI_TXBOX);
-
-            desksentThread = new Thread(new ThreadStart(sendDesktop));
-            desksentThread.IsBackground = true;
-            desksentThread.Start();
-        }
-        public void disconnectEnd(string result)
-        {
-            //断开连接；
-            //停止发送IMG和CMD数据。等待停止发送数据的方法
-            isCtrl = false;
-            if (result.Equals(MyConfig.STR_SHUTDOWN_DESK_FAIL))
-            {
-                role = MyConfig.STR_OPEN_DESK_NORMAL;
-                updateInfo("该客户端没有建立远程控制连接", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
-            if (result.Equals(MyConfig.STR_SHUTDOWN_DESK_OK))
-            {
-                if (role.Equals(MyConfig.STR_OPEN_DESK_MASTER))
-                {
-                    updateInfo(result, MyConfig.INT_DELETE_DESK_CONTAINER);
-                    updateInfo("退出MASTER模式成功,切换为normal", MyConfig.INT_UPDATEUI_TXBOX);
-                }
-                if (role.Equals(MyConfig.STR_OPEN_DESK_SLAVE))
-                {
-                    try
-                    {
-                        desksentThread.Abort();
-                    }
-                    catch
-                    {
-                        updateInfo("中断图形数据传输线程时发生异常", MyConfig.INT_UPDATEUI_TXBOX);
-                    }
-                    updateInfo("退出SLAVE模式成功,切换为normal", MyConfig.INT_UPDATEUI_TXBOX);
-                }
-                role = MyConfig.STR_OPEN_DESK_NORMAL;
-                return;
-            }
-        }
-
-        //master
-        public void sendCmd(String cmd)
-        {
-            if (!isCtrl)
-            {
-                role = "normal";
-                updateInfo("当前没有连接,切换为normal模式", MyConfig.INT_UPDATEUI_TXBOX);
-                return;
-            }
-            mySocket.sent((byte)MyConfig.REQ_TYPE_CONTROL_CMD, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, cmd);
-        }
-
-
-        public void drawDeskTop(byte[] deskTop)
-        {
-            //反序列化
-            Bitmap deskImg = null;
-
-            using (MemoryStream ms = new MemoryStream(deskTop))
-            {
-                BinaryFormatter bf = new BinaryFormatter();
-                List<ImgEntity> imgs = (List<ImgEntity>)bf.Deserialize(ms);
-                deskImg = ir.recovery(imgs);
-            }
-            if (deskImg == null)
-            {
-                updateInfo("接收初始化数据错误", MyConfig.INT_UPDATEUI_TXBOX);
             }
             else
             {
-                //开始渲染desk
-                updateDesk(deskImg);
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_NONE;
+                updateInfo("服务端启动失败", MyConfig.INT_UPDATEUI_TXBOX);
+                updateInfo("", MyConfig.INT_SERVER_FAIL);
             }
-
+        }
+        void mySocket_AcceptClient(WorkSocket workSocke)
+        {
+            updateInfo("新的连接:" + workSocke.session.RemoteEndPoint.ToString(), MyConfig.INT_UPDATEUI_TXBOX);
         }
 
-        //slave
-        public void responseCmd(string cmd)
+        void socket_ReceiveMessage(WorkSocket workSocke, byte[] pToken, byte[] obj)
         {
-            updateInfo("收到指令 : " + cmd, MyConfig.INT_UPDATEUI_TXBOX);
-            ResponseEvent.exeEvent(cmd);
-        }
-
-        public void sendDesktop()
-        {
-
-
-            CatchScreen cs = new CatchScreen();
-            ImgCompara imgCompara = new ImgCompara();
-            //新开线程处理被控端的桌面数据;
-            while (isCtrl && isLogining && mySocket.isConn)
+            byte[] serverToken = mySocket.getToken();
+            for (int i = 0; i < serverToken.Length; i++)
             {
-                //TimeSpan ts1 = new TimeSpan(DateTime.Now.Ticks);       
-                List<ImgEntity> deskList = cs.getImgs();
-                List<ImgEntity> changes = imgCompara.compress(deskList);
-
-                if (changes.Count > 0)
+                if (serverToken[i] != pToken[i])
                 {
-                    //TimeSpan ts2 = new TimeSpan(DateTime.Now.Ticks)
-                    //Console.WriteLine("chang count = " + changes.Count);
-                    using (MemoryStream ms = new MemoryStream())
-                    {
-                        BinaryFormatter bf = new BinaryFormatter();
-                        bf.Serialize(ms, changes);
-                        Byte[] imgBuffer = new Byte[ms.Length];
-                        ms.Seek(0, SeekOrigin.Begin);
-                        ms.Read(imgBuffer, 0, (Int32)ms.Length);
-                        Console.WriteLine("send lenth = " + imgBuffer.Length);
-                        mySocket.sent((byte)MyConfig.REQ_TYPE_DESKTOP_SWITCH, MyConfig.PROTOCOL_HEAD_HAS_TOKEN, mySocket.token, imgBuffer);
-                    }
-                    if (changes.Count >= (MyConfig.INT_BLOCK_X_COUNT * MyConfig.INT_BLOCK_Y_COUNT * 2 / 3))
-                    {
-                        //超过2/3的时候，切换低频率
-                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_LOW);
-                    }
-                    else if (changes.Count >= (MyConfig.INT_BLOCK_X_COUNT * MyConfig.INT_BLOCK_Y_COUNT * 1 / 3))
-                    {
-                        //数据变化1/3到2/3之间，则切换为中频
-                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_NORMAL);
-                    }
-                    else
-                    {
-                        //低于1/3数据变换，则切换为高频
-                        Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_HIGHT);
-                    }
-                }
-                else
-                {
-                    //没有数据变换，则休眠1秒
-                    Thread.Sleep(MyConfig.INT_DESKTOP_REFLUSH_FREQUENCY_SLEEP);
+                    updateInfo("密钥异常，关闭连接:" + workSocke.session.RemoteEndPoint.ToString(), MyConfig.INT_UPDATEUI_TXBOX);
+                    return;
                 }
             }
-            // Console.WriteLine("退出数据发送, isctrl:" + isCtrl + " isLogin:" + isLogining + " isconn:" + mySocket.isConn);
+            dataProccess(workSocke, obj);
+        }
+
+        void socket_sessionClosed(WorkSocket workSocket)
+        {
+            String key = workSocket.remoteDeviceId;
+            sessions.Remove(key);
+            if(key.Equals(activeId))
+            {
+                closeShadowForm(workSocket);
+                closeMouseSession(workSocket);
+            }
+            updateInfo(key, MyConfig.INT_CLIENT_OFFLINE);
+            updateInfo("close:" + workSocket.remoteIp + ":" + workSocket.remotePort, MyConfig.INT_UPDATEUI_TXBOX);
+        }
+        void mySocket_ErrLog(WorkSocket workSocket,int code,string obj)
+        {
+            switch(code)
+            {
+                case AppProtocol.ERR_CODE_FLAG:
+                    updateInfo(workSocket.remoteIp + ":" + workSocket.remotePort + "," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
+                    break;
+                case AppProtocol.ERR_CODE_RECEIVE_DATA:
+                    updateInfo(workSocket.remoteIp + ":" + workSocket.remotePort + "," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
+                    break;
+                case AppProtocol.ERR_CODE_HEALTH_CHECKED:
+                    updateInfo(workSocket.remoteIp+":"+workSocket.remotePort+"," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
+                    break;
+            }
+        }
+        public void StartServer()
+        {
+            Thread thread = new Thread(new ThreadStart(startService));
+            thread.IsBackground = true;
+            thread.Start();
+        }
+        private void startService()
+        {
+            mySocket.CreateServer(MyConfig.INT_SERVER_PORT);
+        }
+        private void dataProccess(WorkSocket workSocket, byte[] obj)
+        {
+            byte[] payLoad = new byte[obj.Length - 1];
+            System.Array.Copy(obj, 1, payLoad, 0, payLoad.Length);
+            switch (obj[0])
+            { 
+            case  MyConfig.INT_APP_PROTOCOL_JSON:
+                    ProccessJson(workSocket, payLoad);
+                    break;
+            case  MyConfig.INT_APP_PROTOCOL_BYTE:
+                    ProccessByte(workSocket, payLoad);
+                    break;
+             }
+        }
+        private void ProccessJson(WorkSocket workSocket, byte[] payLoad)
+        {
+            ApplicationProtocol ap=MakeJson.getApplicationProtocol(payLoad);
+            updateInfo(ap.type+":"+ap.content, MyConfig.INT_UPDATEUI_TXBOX);
+            switch (ap.type)
+            {
+                case AppProtocol.json_type_req_local_check:
+                    CheckPsw(workSocket, ap.content);
+                    break;
+                case AppProtocol.json_type_req_local_repeat:
+                    //repeatConn(workSocket, ap.content);
+                    break;
+                //case "move":
+                //    MoveMouse(workSocket, jobject);
+                //    break;
+                //case "click":
+                //    ClickMouse(workSocket, jobject);
+                //    break;
+                case AppProtocol.json_type_req_local_open_shadow:
+                    CreateShadowContainer(workSocket, ap.content);
+                    break;
+                case AppProtocol.json_type_req_local_close_shadow:
+                    closeShadowForm(workSocket);
+                    break;
+                case AppProtocol.json_type_req_local_open_mouse:
+                    startMouseMode(workSocket);
+                    break;
+                case AppProtocol.json_type_req_local_close_mouse:
+                    closeMouseMode(workSocket);
+                    break;
+            }
+        }
+
+        private void closeMouseSession(WorkSocket workSocket)
+        {
+            if(workSocket==activeSocket&&serverWorkStatus==MyConfig.SERVER_WORK_STATUS_MOUSE)
+            {
+                updateInfo(activeId, MyConfig.INT_CLIENT_OFFLINE);
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
+                activeSocket = null;
+                activeId = "";
+                Console.WriteLine(activeId);
+            }
+        }
+
+
+        private void startMouseMode(WorkSocket workSocket)
+        {
+            if(serverWorkStatus==MyConfig.SERVER_WORK_STATUS_FREE)
+            {
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_MOUSE;
+                activeId = workSocket.remoteDeviceId;
+                activeSocket = workSocket;
+                updateInfo(activeId, MyConfig.INT_CLIENT_BUSY);
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_mouse_open_ok, "连接成功!");
+            }
+            else
+            {
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_mouse_open_fail, "连接失败!");
+            }
+        }
+        private void closeMouseMode(WorkSocket workSocket)
+        {
+            if (workSocket == activeSocket && serverWorkStatus == MyConfig.SERVER_WORK_STATUS_MOUSE)
+            {
+                updateInfo(activeId, MyConfig.INT_CLIENT_FREE);
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
+                activeSocket = null;
+                activeId = "";
+            }
+        }
+
+        private void ProccessByte(WorkSocket workSocket, byte[] payLoad)
+        {
+            if (activeId.Equals(workSocket.remoteDeviceId)&&(workSocket==activeSocket))
+            {
+                 UpdateShadowContainer(payLoad);
+            }
+        }
+        void UpdateShadowContainer(byte[] desk)
+        {
+            updateInfo("正常收到投影数据：" + desk.Length + " byte", MyConfig.INT_UPDATEUI_TXBOX);
+            using (MemoryStream ms = new MemoryStream(desk))
+            {
+                Image img = Image.FromStream(ms);
+                Bitmap deskImg = new Bitmap(deskWidth, deskHeight);
+                Graphics g = Graphics.FromImage(deskImg);
+                g.DrawImage(img, 0, 0);
+                DrawShadow(deskImg);
+            }
+        }
+
+        private void DrawShadow(Bitmap desk)
+        {
+            updateDesk(desk);
+        }
+
+        void CreateShadowContainer(WorkSocket workSocket,String content)
+        {
+            if (serverWorkStatus==MyConfig.SERVER_WORK_STATUS_FREE)
+            {
+                deskWidth = Int32.Parse(content.Split('|')[0]);
+                deskHeight = Int32.Parse(content.Split('|')[1]);
+                activeId = workSocket.remoteDeviceId;
+                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_SHADOW;
+                activeSocket = workSocket;
+                updateInfo(workSocket.remoteDeviceId, MyConfig.INT_CLIENT_BUSY);//更新设备列表
+                updateInfo("Start shadow container!", MyConfig.INT_CREATE_DESK_CONTAINER);//创建容器
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_ok, "连接成功");
+            }
+            else
+            {
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_fail, "服务端被占用");
+            }
+        }
+
+        void clearActiveStatus()
+        {
+            updateInfo(activeId, MyConfig.INT_CLIENT_FREE);
+            serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
+            activeSocket = null;
+            activeId = "";
+
+        }
+        private void closeShadowForm(WorkSocket workSocket)
+        {
+            if (activeSocket == workSocket && activeId.Equals(workSocket.remoteDeviceId) && serverWorkStatus == MyConfig.SERVER_WORK_STATUS_SHADOW)
+            {
+            clearActiveStatus();
+            updateInfo("Close shadow container!", MyConfig.INT_DELETE_DESK_CONTAINER);
+            }
+        }
+
+        public void notifyCloseShadow()
+        {
+            //如果是服务端手动点击关闭窗口，该代码会执行
+            if(activeSocket!=null&&!activeId.Equals("")&&serverWorkStatus==MyConfig.SERVER_WORK_STATUS_SHADOW)
+            {
+                Thread thread = new Thread(new ThreadStart(sendToActiveCloseShadow));
+                thread.IsBackground = true;
+                thread.Start();
+            }
+        }
+        void sendToActiveCloseShadow()
+        {
+            SendMsgToClient(activeSocket, AppProtocol.json_type_notify_back_shadow_close, "");
+            clearActiveStatus();
+        }
+ 
+        void ClickMouse(WorkSocket workSocket, JObject jobject)
+        {
+            //String cmd = jobject[AppProtocol.STR_JSON_CONTENT].ToString();
+            //ResponseEvent.ReponseClick(cmd);
+        }
+        private void MoveMouse(WorkSocket workSocket, JObject jobject)
+        {
+            //String[] postion = jobject[AppProtocol.STR_JSON_CONTENT].ToString().Split('_');
+            //int x = Int32.Parse(postion[1]);
+            //int y = Int32.Parse(postion[0]);
+            //ResponseEvent.ReponseMove(x, y);
+        }
+        private void CheckPsw(WorkSocket workSocket, String content)
+        {
+            DeviceInfo device = (DeviceInfo)JsonConvert.DeserializeObject(content,typeof(DeviceInfo));
+            device.remoteIp = workSocket.remoteIp;
+            workSocket.remoteDeviceId = device.deviceId;
+            String key = device.deviceId;
+            if (sessions.ContainsKey(key))
+            {
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_fail,"连接失败，您已经连接！");
+                return ;
+            }
+            if (device.accessCode.Equals(myPsw))
+            {
+                sessions.Add(key, workSocket);
+                updateInfo(device, MyConfig.INT_CLIENT_ONLINE);
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_success, "连接成功!");
+            }
+            else
+            {
+                updateInfo(device, MyConfig.INT_CLIENT_ADD_TEMP);
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_fail, "密码校验失败!");
+            }
+        }
+
+        public void SendMsgToClient(WorkSocket workSocket, int type, String content)
+        {
+            byte[] data = MakeJson.getJsonByte(type, content);
+            mySocket.sent(workSocket, data);
         }
     }
 }

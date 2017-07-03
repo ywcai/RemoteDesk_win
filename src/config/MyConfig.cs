@@ -2,57 +2,28 @@
 { 
     class MyConfig
     {
-        //协议
-
-        public const int INT_PACKAGE_HEAD_LEN = 28;
-        public const int PROTOCOL_HEAD_FLAG = 0x7E;
-        public const int PROTOCOL_HEAD_HAS_TOKEN = 0x01;
-        public const int PROTOCOL_HEAD_NOT_TOKEN = 0x00;
-
-        public const int PROTOCOL_HEAD_TYPE_JSON = 0x01;
-        public const int PROTOCOL_HEAD_TYPE_IMG = 0x02;
-
-        public const int REQ_TYPE_USER_LOGIN_IN = 0x01;
-        public const int REQ_TYPE_USER_LOGIN_OUT = 0x02;
-        public const int REQ_TYPE_DESK_LINK_OPEN = 0x03;
-        public const int REQ_TYPE_DESK_SHOWDOWN = 0x04;
-        public const int REQ_TYPE_CONTROL_CMD = 0x05;
-        public const int REQ_TYPE_DESKTOP_SWITCH = 0x06;
-        public const int REQ_TYPE_CLIENT_LIST_UPDATE = 0x07;
-        //public const int REQ_TYPE_LINK_STATUS_ON = 0x08;
-        //public const int REQ_TYPE_LINK_STATUS_OFF = 0x09;
-        public const int PROTOCOL_HEAD_RESERVE = 0x7F;//预留
-
-
-
-        //协议起始位置，大小
-        public const int PROTOCOL_HEAD_POS_FLAG = 0;
-        public const int PROTOCOL_HEAD_POS_TOKENTYPE = 1;
-        public const int PROTOCOL_HEAD_POS_DATATYPE = 2;
-        public const int PROTOCOL_HEAD_POS_REQTYPE = 3;
-        public const int PROTOCOL_HEAD_POS_TOKEN = 4;
-        public const int PROTOCOL_HEAD_SIZE_TOKEN = 16;
-        public const int PROTOCOL_HEAD_POS_DATALEN = 20;
-        public const int PROTOCOL_HEAD_POS_RESERVE = 24;//预留
-        public const int PROTOCOL_HEAD_SIZE_RESERVE = 4;//预留
-
+    
         //更新前端UI方法选择
         public const int INT_CLEAR_LIST = 0;
         public const int INT_UPDATEUI_LIST = 1;
         public const int INT_UPDATEUI_TXBOX = 2;
-       // public const int INT_UPDATEUI_LIST_SUB = 3;
         public const int INT_CREATE_DESK_CONTAINER = 4;
         public const int INT_DELETE_DESK_CONTAINER = 5;
         public const int INT_INIT_CLIENT_LIST = 6;
         public const int INT_CHANGE_OUT = 7;
-        //public const int INT_TURN_ON=8;
-        //public const int INT_TURN_OFF=9;
+        public const int INT_SERVER_SUCCESS=8;
+        public const int INT_SERVER_FAIL = 9;
+        public const int INT_CLIENT_ONLINE = 10;
+        public const int INT_CLIENT_OFFLINE = 11;
+        public const int INT_CLIENT_BUSY = 12;
+        public const int INT_CLIENT_ADD_TEMP = 13;
+        public const int INT_CLIENT_FREE= 14;        
 
         //相关网络配置选项
-        public const string STR_SERVER_IP = "119.6.204.54" ;
         public const int INT_SERVER_PORT =7772;
-        public const int INT_SOCKET_TIMEOUT = 100;
-        public const int INT_SOCKET_BUFFER_SIZE = 2048 * 16;
+        public const int INT_SOCKET_TIMEOUT = 1000;
+        public const byte INT_APP_PROTOCOL_JSON = 0xa;
+        public const byte INT_APP_PROTOCOL_BYTE = 0xb;
 
         //图片压缩选项
 
@@ -89,5 +60,12 @@
         public const string STR_OPEN_DESK_FAIL1 = "not_link_self";
         public const string STR_SHUTDOWN_DESK_FAIL = "has_no_link";
         public const string STR_SHUTDOWN_DESK_OK = "disconnect_ok";
+
+
+
+        public const int SERVER_WORK_STATUS_SHADOW = 30001;
+        public const int SERVER_WORK_STATUS_MOUSE = 30002;
+        public const int SERVER_WORK_STATUS_FREE= 30003;
+        public const int SERVER_WORK_STATUS_NONE = 30004;
     }
 }

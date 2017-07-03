@@ -10,21 +10,17 @@ namespace ywcai.core.veiw
     {
         private ControlCenter ctrl;
         private Boolean menuFlag=true;
-
         public const int syscommand = 0x112;
         public const int maxbutton = 0xF030;
         public DeskForm(ControlCenter ctrlbus)
         {
             ctrl = ctrlbus;
             InitializeComponent();
-            this.picbox_desk.MouseWheel +=new MouseEventHandler(picbox_desk_MouseWheel)   ; 
         }
-
-  
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            ctrl.disconnectLink();
+            ctrl.notifyCloseShadow();
         }
         protected override void WndProc(ref Message m)
         {
@@ -45,8 +41,6 @@ namespace ywcai.core.veiw
 
         public void draw(Bitmap img)
         {
-            picbox_desk.Width = img.Width;
-            picbox_desk.Height = img.Height;
             picbox_desk.Image = img;
         }
         public void setFullScreen()
@@ -95,7 +89,7 @@ namespace ywcai.core.veiw
 
         private void bt_shutdown_Click(object sender, System.EventArgs e)
         {
-            ctrl.disconnectLink();
+            this.Close();
         }
 
     }

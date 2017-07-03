@@ -112,7 +112,7 @@ namespace ywcai.util.draw
                 }
             }
             byte[] compress = new byte[pos];
-            MyUtil.copyArray(temp, 0, compress, 0, pos);
+            temp.CopyTo(compress, 0);
             return compress;
         }
     }

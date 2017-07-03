@@ -1,0 +1,4 @@
+byte 0    : 0x01  : 标识位
+byte 1-16 : String: 密钥位
+byte 17-20 : int32: 数据长度
+byte 21-end : byte: 可变长负载

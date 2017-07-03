@@ -54,7 +54,7 @@ namespace ywcai.core.veiw
 
         private void sendEvent(String cmd)
         {
-            ctrl.sendCmd(cmd);
+            //ctrl.sendCmd(cmd);
         }
     }
 }

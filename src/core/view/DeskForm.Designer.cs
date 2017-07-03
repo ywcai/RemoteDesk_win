@@ -145,10 +145,12 @@
             // picbox_desk
             // 
             this.picbox_desk.BackColor = System.Drawing.Color.Transparent;
+            this.picbox_desk.Dock = System.Windows.Forms.DockStyle.Fill;
             this.picbox_desk.Location = new System.Drawing.Point(0, 0);
             this.picbox_desk.Margin = new System.Windows.Forms.Padding(0);
             this.picbox_desk.Name = "picbox_desk";
             this.picbox_desk.Size = new System.Drawing.Size(655, 451);
+            this.picbox_desk.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.picbox_desk.TabIndex = 0;
             this.picbox_desk.TabStop = false;
             this.picbox_desk.MouseDown += new System.Windows.Forms.MouseEventHandler(this.picbox_desk_MouseDown);

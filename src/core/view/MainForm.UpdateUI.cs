@@ -2,20 +2,18 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using ywcai.core.sokcet;
+using ywcai.core.veiw.src.core;
 using ywcai.global.config;
 
 namespace ywcai.core.veiw
 {
     partial class RemoteDesk
     {
-        private DeskForm deskForm;
-        private MySocket mySocket = MySocket.GetInstance();
-        private delegate void UiEventsHandler(String mes, Int32 method); //普通UI更新委托
+        private DeskForm deskForm=null;
+        private delegate void UiEventsHandler(Object mes, Int32 method); //普通UI更新委托
         private delegate void DeskEventsHandler(Bitmap img); //持续渲染屏幕
         private void registerDelegate()
         {
-            mySocket.updateInfo += showInfo;
             ctrlCenter.updateInfo += showInfo;
             ctrlCenter.updateDesk += drawDesk;
         }
@@ -46,26 +44,20 @@ namespace ywcai.core.veiw
             if (InvokeRequired)
             {
                 UiEventsHandler mh = print;
-                object[] pList = { pMes.ToString(), method };
+                object[] pList = { pMes, method };
                 Invoke(mh, pList);//同步执行了
             }
             else
             {
-                print(pMes.ToString(), method);
+                print(pMes, method);
             }
         }
-        private void print(String mes, Int32 method)
+        private void print(Object mes, Int32 method)
         {
             switch (method)
             {
-                case MyConfig.INT_CLEAR_LIST:
-                    clearListItems();
-                    break;
-                case MyConfig.INT_UPDATEUI_LIST:
-                    updateUserList(mes);
-                    break;
                 case MyConfig.INT_UPDATEUI_TXBOX:
-                    infoLabel.Text = mes;
+                    infoLabel.Text = mes.ToString();
                     break;
                 case MyConfig.INT_CREATE_DESK_CONTAINER:
                     addDesk();
@@ -73,140 +65,181 @@ namespace ywcai.core.veiw
                 case MyConfig.INT_DELETE_DESK_CONTAINER:
                     removeDesk();
                     break;
-                case MyConfig.INT_INIT_CLIENT_LIST:
-                    initRemoteLists(mes);
+                case MyConfig.INT_SERVER_SUCCESS:
+                    startServer(true);
                     break;
-                case MyConfig.INT_CHANGE_OUT:
-                    turnOffLine();
+                case MyConfig.INT_SERVER_FAIL:
+                    startServer(false);
                     break;
-
+                case MyConfig.INT_CLIENT_ONLINE:
+                    addOnlineClient(mes);
+                    break;
+                case MyConfig.INT_CLIENT_OFFLINE:
+                    turnOffline(mes);
+                    break;
+                case MyConfig.INT_CLIENT_BUSY:
+                    turnBusy(mes);
+                    break;
+                case MyConfig.INT_CLIENT_FREE:
+                    turnFree(mes);
+                    break;
+                case MyConfig.INT_CLIENT_ADD_TEMP:
+                    addTempClient(mes);
+                    break;
                 default:
                     //do nothing;
                     break;
             }
         }
 
-        private void turnOffLine()
+        private void addTempClient(object mes)
         {
-            ctrlCenter.isCtrl = false;
-            ctrlCenter.isLogining = false;
-            removeDesk();
-            clearListItems();
-        }
-
-        private void initRemoteLists(String mes)
-        {
-            String[] list = mes.Split('|');
-            for(Int32 i=0; i<list.Length; i++)
-            {
-                if(!list[i].Equals(""))
-                { 
-                String[] str = list[i].Split(',');
-                String displayname = str[0];
-                String ip = str[1].Remove(0, 1);
-                Int32 dreviceType = Int32.Parse(str[4]);
-                String tag = str[5];
-                Boolean isOnline = str[2].Equals("true") ? true : false;
-                Boolean isVip = str[3].Equals("true") ? true : false;
-                ChatListSubItem newClient = new ChatListSubItem();
-                newClient.HeadImage = global::ywcai.core.veiw.Properties.Resources.remote;
-                newClient.DisplayName = displayname;
-                newClient.NicName = tag;
-                newClient.Tag = tag;
-                newClient.IpAddress = ip;
-                newClient.PersonalMsg = ip;
-                newClient.Status = (isOnline ? ChatListSubItem.UserStatus.Online : ChatListSubItem.UserStatus.OffLine);
-                newClient.IsVip = isVip;
-                newClient.PlatformTypes = (dreviceType == MyConfig.INT_CLIENT_TYPE_PC ? PlatformType.PC : PlatformType.Iphone);
-                newClient.OwnerListItem = listbox_clients.Items[1];
-                listbox_clients.Items[1].SubItems.Add(newClient);
-                }
-            }
-        }
-
-
-        private void clearListItems()
-        {
-            listbox_clients.Items[0].SubItems[0].Status = ChatListSubItem.UserStatus.OffLine;
-            listbox_clients.Items[0].SubItems[0].PersonalMsg = "0.0.0.0";
-            listbox_clients.Items[0].SubItems[0].IpAddress= "0.0.0.0";
-            listbox_clients.Items[0].SubItems[0].NicName = "0" ;
-            listbox_clients.Items[0].SubItems[0].Tag= "0";
-            listbox_clients.Items[0].SubItems[0].IsVip = false;
-            if (listbox_clients.Items[1].SubItems.Count != 0)
-            { 
-            listbox_clients.Items[1].SubItems.Clear();
-            }
-        }
-
-        private void updateUserList(String mes)
-        {
-            String[] str = mes.Split(',');
-            String displayname = str[0];
-            String ip = str[1].Remove(0, 1);
-            Int32 dreviceType = Int32.Parse(str[4]);
-            String tag = str[5];
-            Boolean isOnline = str[2].Equals("true") ? true : false;
-            Boolean isVip = str[3].Equals("true") ? true : false;
-            if (listbox_clients.Items[0].SubItems[0].DisplayName.Equals(displayname))
-            {
-                listbox_clients.Items[0].SubItems[0].NicName = tag;
-                listbox_clients.Items[0].SubItems[0].Tag = tag;
-                listbox_clients.Items[0].SubItems[0].IpAddress = ip;
-                listbox_clients.Items[0].SubItems[0].PersonalMsg = ip;
-                listbox_clients.Items[0].SubItems[0].Status =( isOnline? ChatListSubItem.UserStatus.Online: ChatListSubItem.UserStatus.OffLine) ;
-                listbox_clients.Items[0].SubItems[0].IsVip = isVip;
-                listbox_clients.Items[0].SubItems[0].PlatformTypes = (dreviceType == MyConfig.INT_CLIENT_TYPE_PC ? PlatformType.PC : PlatformType.Iphone);
-                return;
-            }
+            DeviceInfo deviceInfo = (DeviceInfo)mes;
             foreach (ChatListSubItem remote in listbox_clients.Items[1].SubItems)
             {
-                if (remote.DisplayName.Equals(displayname))
+                if (remote.DisplayName.Equals(deviceInfo.deviceId))
                 {
-                    remote.NicName = tag;
-                    remote.Tag = tag;
-                    remote.IpAddress = ip;
-                    remote.PersonalMsg = ip;
-                    remote.Status = (isOnline ? ChatListSubItem.UserStatus.Online : ChatListSubItem.UserStatus.OffLine);
-                    remote.IsVip = isVip;
-                    remote.PlatformTypes = (dreviceType == MyConfig.INT_CLIENT_TYPE_PC ? PlatformType.PC : PlatformType.Iphone);
+                    remote.IpAddress = deviceInfo.remoteIp;
+                    remote.PersonalMsg = deviceInfo.remoteIp;
+                    remote.Status = ChatListSubItem.UserStatus.OffLine;
+                    remote.IsVip = false;
                     return;
                 }
             }
-            ChatListSubItem  newClient= new ChatListSubItem();
-            newClient.HeadImage=global::ywcai.core.veiw.Properties.Resources.remote;
-            newClient.DisplayName = displayname;
-            newClient.NicName = tag;
-            newClient.Tag = tag;
-            newClient.IpAddress = ip;
-            newClient.PersonalMsg = ip;
-            newClient.Status = (isOnline ? ChatListSubItem.UserStatus.Online : ChatListSubItem.UserStatus.OffLine);
-            newClient.IsVip = isVip;
-            newClient.PlatformTypes = (dreviceType == MyConfig.INT_CLIENT_TYPE_PC ? PlatformType.PC : PlatformType.Iphone);
+            ChatListSubItem newClient = new ChatListSubItem();
+            newClient.HeadImage = global::ywcai.core.veiw.Properties.Resources.remote;
+            newClient.DisplayName = deviceInfo.deviceId;
+            newClient.NicName = deviceInfo.deviceName;
+            newClient.Tag = deviceInfo.deviceMode;
+            newClient.IpAddress = deviceInfo.remoteIp;
+            newClient.PersonalMsg = deviceInfo.remoteIp;
+            newClient.Status = ChatListSubItem.UserStatus.OffLine;
+            newClient.IsVip = false;
+            newClient.PlatformTypes = PlatformType.Iphone;
             newClient.OwnerListItem = listbox_clients.Items[1];
             listbox_clients.Items[1].SubItems.Add(newClient); 
+        }
+        private void addOnlineClient(Object mes)
+        {
+            DeviceInfo deviceInfo = (DeviceInfo)mes;
+            //String port = mes.Split(':')[1];
+            foreach (ChatListSubItem remote in listbox_clients.Items[1].SubItems)
+            {
+                if (remote.DisplayName.Equals(deviceInfo.deviceId))
+                {
+                    remote.NicName = deviceInfo.deviceName;
+                    remote.Tag = deviceInfo.deviceMode;
+                    remote.IpAddress = deviceInfo.remoteIp;
+                    remote.PersonalMsg = deviceInfo.remoteIp;
+                    remote.Status = ChatListSubItem.UserStatus.Online;
+                    return;
+                }
+            }
+            ChatListSubItem newClient = new ChatListSubItem();
+            newClient.HeadImage = global::ywcai.core.veiw.Properties.Resources.remote;
+            newClient.DisplayName = deviceInfo.deviceId;
+            newClient.NicName = deviceInfo.deviceName;
+            newClient.Tag = deviceInfo.deviceMode;
+            newClient.IpAddress = deviceInfo.remoteIp;
+            newClient.PersonalMsg = deviceInfo.remoteIp;
+            newClient.Status = ChatListSubItem.UserStatus.Online;
+            newClient.IsVip = false;
+            newClient.PlatformTypes = PlatformType.Iphone;
+            newClient.OwnerListItem = listbox_clients.Items[1];
+            listbox_clients.Items[1].SubItems.Add(newClient);
+        }
+
+        private void turnBusy(Object mes)
+        {
+            
+            foreach (ChatListSubItem remote in listbox_clients.Items[1].SubItems)
+            {
+                if (mes.ToString().Equals(remote.DisplayName))
+                {
+                    remote.IsVip = true;
+                    remote.Status = ChatListSubItem.UserStatus.OffLine;
+                    remote.Status = ChatListSubItem.UserStatus.Online;
+                    return;
+                }
+            }
+        }
+
+        private void turnOffline(Object mes)
+        {
+            String deviceId = mes.ToString();
+            foreach (ChatListSubItem remote in listbox_clients.Items[1].SubItems)
+            {
+                if (remote.DisplayName.Equals(deviceId))
+                {
+                    remote.IsVip = false;
+                    remote.Status = ChatListSubItem.UserStatus.OffLine;
+                    return;
+                }
+            }
+        }
+        private void turnFree(Object mes)
+        {
+            String deviceId = mes.ToString();
+            foreach (ChatListSubItem remote in listbox_clients.Items[1].SubItems)
+            {
+                if (remote.DisplayName.Equals(deviceId))
+                {
+                    remote.IsVip = false;
+                    remote.Status = ChatListSubItem.UserStatus.OffLine;
+                    remote.Status = ChatListSubItem.UserStatus.Online;
+                    return;
+                }
+            }
+        }
+
+      
+        private void startServer(bool p)
+        {
+          if(p)
+          {
+              listbox_clients.Items[0].SubItems[0].NicName = MyConfig.INT_SERVER_PORT.ToString(); 
+              listbox_clients.Items[0].SubItems[0].DisplayName = label_nickname.Text;
+              listbox_clients.Items[0].SubItems[0].PlatformTypes = PlatformType.PC;
+              listbox_clients.Items[0].SubItems[0].PersonalMsg = "启动正常";
+              listbox_clients.Items[0].SubItems[0].Status = ChatListSubItem.UserStatus.Online;
+              listbox_clients.Items[0].SubItems[0].IsVip = true;
+          }
+          else
+          {
+              listbox_clients.Items[0].SubItems[0].NicName = MyConfig.INT_SERVER_PORT.ToString();
+              listbox_clients.Items[0].SubItems[0].DisplayName = label_nickname.Text;
+              listbox_clients.Items[0].SubItems[0].PlatformTypes = PlatformType.PC;
+              listbox_clients.Items[0].SubItems[0].PersonalMsg = "启动失败";
+              listbox_clients.Items[0].SubItems[0].Status = ChatListSubItem.UserStatus.OffLine;
+              listbox_clients.Items[0].SubItems[0].IsVip = false;
+          }
         }
 
         private void addDesk()
         {
-            deskForm = new DeskForm(ctrlCenter);
-            deskForm.Show();
-            deskForm.setFullScreen();
-            //deskTop.Dock = DockStyle.Left | DockStyle.Top;
-            //panel.BackColor = Color.AliceBlue;
-            //this.Controls.Add(panel);
-            //panel.BringToFront();
-            //setMaxScreen();
+            if(deskForm==null)
+            { 
+                deskForm = new DeskForm(ctrlCenter);
+                deskForm.Show();
+                deskForm.setFullScreen();
+                return ;
+            }
+            if(deskForm.IsDisposed)
+            {
+                deskForm = new DeskForm(ctrlCenter);
+                deskForm.Show();
+                deskForm.setFullScreen();
+            }
         }
         private void removeDesk()
         {
-            //this.Controls.Remove(panel);
-            if(!deskForm.IsNull())
+            if(deskForm!=null)
             { 
-            deskForm.Close();
+                if(!deskForm.IsDisposed)
+                { 
+                deskForm.Close();
+                }
             }
-            //setNormalScreen();
         }
-
     }
 }

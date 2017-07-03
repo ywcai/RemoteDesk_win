@@ -35,7 +35,6 @@ namespace ywcai.core.veiw
             CCWin.SkinControl.ChatListItem chatListItem1 = new CCWin.SkinControl.ChatListItem();
             CCWin.SkinControl.ChatListSubItem chatListSubItem1 = new CCWin.SkinControl.ChatListSubItem();
             CCWin.SkinControl.ChatListItem chatListItem2 = new CCWin.SkinControl.ChatListItem();
-            CCWin.SkinControl.ChatListItem chatListItem3 = new CCWin.SkinControl.ChatListItem();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RemoteDesk));
             this.listbox_clients = new CCWin.SkinControl.ChatListBox();
             this.statusPanel = new CCWin.SkinControl.SkinPanel();
@@ -51,8 +50,7 @@ namespace ywcai.core.veiw
             this.skinLine1 = new CCWin.SkinControl.SkinLine();
             this.icon_task = new System.Windows.Forms.NotifyIcon(this.components);
             this.menu_task = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.menu_login = new System.Windows.Forms.ToolStripMenuItem();
-            this.menu_loginout = new System.Windows.Forms.ToolStripMenuItem();
+            this.menu_show = new System.Windows.Forms.ToolStripMenuItem();
             this.menu_close = new System.Windows.Forms.ToolStripMenuItem();
             this.statusPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.userPic)).BeginInit();
@@ -95,24 +93,17 @@ namespace ywcai.core.veiw
             chatListItem1.SubItems.AddRange(new CCWin.SkinControl.ChatListSubItem[] {
             chatListSubItem1});
             chatListItem1.Tag = null;
-            chatListItem1.Text = "本机信息";
+            chatListItem1.Text = "服务端状态";
             chatListItem1.TwinkleSubItemNumber = 0;
             chatListItem2.Bounds = new System.Drawing.Rectangle(0, 55, 300, 25);
             chatListItem2.IsTwinkleHide = false;
             chatListItem2.OwnerChatListBox = this.listbox_clients;
             chatListItem2.Tag = null;
-            chatListItem2.Text = "远端设备";
+            chatListItem2.Text = "远端连接";
             chatListItem2.TwinkleSubItemNumber = 0;
-            chatListItem3.Bounds = new System.Drawing.Rectangle(0, 81, 300, 25);
-            chatListItem3.IsTwinkleHide = false;
-            chatListItem3.OwnerChatListBox = this.listbox_clients;
-            chatListItem3.Tag = null;
-            chatListItem3.Text = "局域网设备";
-            chatListItem3.TwinkleSubItemNumber = 0;
             this.listbox_clients.Items.AddRange(new CCWin.SkinControl.ChatListItem[] {
             chatListItem1,
-            chatListItem2,
-            chatListItem3});
+            chatListItem2});
             this.listbox_clients.ListSubItemMenu = null;
             this.listbox_clients.Location = new System.Drawing.Point(0, 111);
             this.listbox_clients.Margin = new System.Windows.Forms.Padding(0);
@@ -159,12 +150,12 @@ namespace ywcai.core.veiw
             this.skinLabel3.BorderColor = System.Drawing.Color.White;
             this.skinLabel3.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.skinLabel3.ForeColor = System.Drawing.Color.White;
-            this.skinLabel3.Location = new System.Drawing.Point(69, 61);
+            this.skinLabel3.Location = new System.Drawing.Point(69, 62);
             this.skinLabel3.Margin = new System.Windows.Forms.Padding(0);
             this.skinLabel3.Name = "skinLabel3";
-            this.skinLabel3.Size = new System.Drawing.Size(64, 19);
+            this.skinLabel3.Size = new System.Drawing.Size(64, 23);
             this.skinLabel3.TabIndex = 8;
-            this.skinLabel3.Text = "设备名";
+            this.skinLabel3.Text = "计算机名";
             // 
             // skinLabel2
             // 
@@ -175,12 +166,12 @@ namespace ywcai.core.veiw
             this.skinLabel2.BorderColor = System.Drawing.Color.White;
             this.skinLabel2.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.skinLabel2.ForeColor = System.Drawing.Color.White;
-            this.skinLabel2.Location = new System.Drawing.Point(69, 40);
+            this.skinLabel2.Location = new System.Drawing.Point(69, 39);
             this.skinLabel2.Margin = new System.Windows.Forms.Padding(0);
             this.skinLabel2.Name = "skinLabel2";
-            this.skinLabel2.Size = new System.Drawing.Size(64, 19);
+            this.skinLabel2.Size = new System.Drawing.Size(64, 26);
             this.skinLabel2.TabIndex = 7;
-            this.skinLabel2.Text = "登录令牌";
+            this.skinLabel2.Text = "连接令牌";
             // 
             // skinLabel1
             // 
@@ -194,9 +185,9 @@ namespace ywcai.core.veiw
             this.skinLabel1.Location = new System.Drawing.Point(69, 15);
             this.skinLabel1.Margin = new System.Windows.Forms.Padding(0);
             this.skinLabel1.Name = "skinLabel1";
-            this.skinLabel1.Size = new System.Drawing.Size(54, 23);
+            this.skinLabel1.Size = new System.Drawing.Size(61, 23);
             this.skinLabel1.TabIndex = 6;
-            this.skinLabel1.Text = "登录名";
+            this.skinLabel1.Text = "连接模式";
             // 
             // label_token
             // 
@@ -207,7 +198,7 @@ namespace ywcai.core.veiw
             this.label_token.BorderColor = System.Drawing.Color.White;
             this.label_token.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.label_token.ForeColor = System.Drawing.Color.Gainsboro;
-            this.label_token.Location = new System.Drawing.Point(130, 37);
+            this.label_token.Location = new System.Drawing.Point(130, 39);
             this.label_token.Margin = new System.Windows.Forms.Padding(0);
             this.label_token.Name = "label_token";
             this.label_token.Size = new System.Drawing.Size(153, 26);
@@ -223,7 +214,7 @@ namespace ywcai.core.veiw
             this.lable_username.BorderColor = System.Drawing.Color.White;
             this.lable_username.Font = new System.Drawing.Font("微软雅黑", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.lable_username.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(192)))), ((int)(((byte)(255)))), ((int)(((byte)(192)))));
-            this.lable_username.Location = new System.Drawing.Point(130, 13);
+            this.lable_username.Location = new System.Drawing.Point(130, 15);
             this.lable_username.Margin = new System.Windows.Forms.Padding(0);
             this.lable_username.Name = "lable_username";
             this.lable_username.Size = new System.Drawing.Size(152, 23);
@@ -263,8 +254,7 @@ namespace ywcai.core.veiw
             // 
             // infoPanel
             // 
-            this.infoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            this.infoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.infoPanel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(233)))), ((int)(((byte)(231)))));
             this.infoPanel.BackgroundImageLayout = System.Windows.Forms.ImageLayout.None;
@@ -327,34 +317,26 @@ namespace ywcai.core.veiw
             // menu_task
             // 
             this.menu_task.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.menu_login,
-            this.menu_loginout,
+            this.menu_show,
             this.menu_close});
             this.menu_task.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.menu_task.Name = "menu_task";
             this.menu_task.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
             this.menu_task.ShowImageMargin = false;
-            this.menu_task.Size = new System.Drawing.Size(76, 70);
+            this.menu_task.Size = new System.Drawing.Size(128, 70);
             this.menu_task.Text = "操作菜单";
             // 
-            // menu_login
+            // menu_show
             // 
-            this.menu_login.Name = "menu_login";
-            this.menu_login.Size = new System.Drawing.Size(75, 22);
-            this.menu_login.Text = "上线";
-            this.menu_login.Click += new System.EventHandler(this.menu_login_Click);
-            // 
-            // menu_loginout
-            // 
-            this.menu_loginout.Name = "menu_loginout";
-            this.menu_loginout.Size = new System.Drawing.Size(75, 22);
-            this.menu_loginout.Text = "离线";
-            this.menu_loginout.Click += new System.EventHandler(this.menu_loginout_Click);
+            this.menu_show.Name = "menu_show";
+            this.menu_show.Size = new System.Drawing.Size(127, 22);
+            this.menu_show.Text = "显示";
+            this.menu_show.Click += new System.EventHandler(this.menu_login_Click);
             // 
             // menu_close
             // 
             this.menu_close.Name = "menu_close";
-            this.menu_close.Size = new System.Drawing.Size(75, 22);
+            this.menu_close.Size = new System.Drawing.Size(127, 22);
             this.menu_close.Text = "退出";
             this.menu_close.Click += new System.EventHandler(this.menu_close_Click);
             // 
@@ -400,6 +382,7 @@ namespace ywcai.core.veiw
             this.ShadowRectangle = new System.Drawing.Rectangle(5, 5, 5, 5);
             this.ShadowWidth = 5;
             this.ShowBorder = false;
+            this.ShowDrawIcon = false;
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Show;
@@ -433,8 +416,7 @@ namespace ywcai.core.veiw
         private SkinLabel skinLabel1;
         private System.Windows.Forms.NotifyIcon icon_task;
         private System.Windows.Forms.ContextMenuStrip menu_task;
-        private System.Windows.Forms.ToolStripMenuItem menu_login;
-        private System.Windows.Forms.ToolStripMenuItem menu_loginout;
+        private System.Windows.Forms.ToolStripMenuItem menu_show;
         private System.Windows.Forms.ToolStripMenuItem menu_close;
     }
 }

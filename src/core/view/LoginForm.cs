@@ -25,14 +25,11 @@ namespace ywcai.core.veiw
         }
         private void login()
         {
-            if(checkbox_autologin.Checked)
-            {
-                //设置自动登录配置;
-            }
-            if (checkbox_readpsw.Checked)
-            {
-                //设置记录密码配置;
-            }
+
+            //if (checkbox_readpsw.Checked)
+            //{
+            //    //设置记录密码配置;
+            //}
             if (checkNormal())
             {
                 label_errinfo.Text = "";
@@ -43,28 +40,20 @@ namespace ywcai.core.veiw
         private void loading()
         {
             tx_username.ReadOnly = true;
-            tx_psw.ReadOnly = true;
             bt_login.Enabled = false;
             bar_loading.Visible = true;
         }
         private void recovery()
         {
             tx_username.ReadOnly = false;
-            tx_psw.ReadOnly = false;
             bt_login.Enabled = true;
             bar_loading.Visible = false;
-            tx_psw.Text = "登录验证失败";
         }
         private Boolean checkNormal()
         { 
-            if (tx_username.Text.Length<6|| tx_username.Text.Length>10)
+            if (tx_username.Text.Length<6|| tx_username.Text.Length>16)
             {
-                label_errinfo.Text = "用户名长度为6-10位";
-                return false;
-            }
-            if (tx_psw.Text.Length < 10 || tx_psw.Text.Length > 18)
-            {
-                label_errinfo.Text = "密码长度为10-18位";
+                label_errinfo.Text = "密码长度为6-16位";
                 return false;
             }
             if (tx_username.Text.Contains("/,") || tx_username.Text.Contains("/.") ||tx_username.Text.Contains("/'") || tx_username.Text.Contains("//"))
@@ -72,11 +61,7 @@ namespace ywcai.core.veiw
                 label_errinfo.Text = "用户名中不允许特殊字符";
                 return false;
             }
-            if (tx_psw.Text.Contains("/,") || tx_psw.Text.Contains("/.") || tx_psw.Text.Contains("/'") || tx_psw.Text.Contains("//"))
-            {
-                label_errinfo.Text = "密码中不允许特殊字符";
-                return false;
-            }
+
             return true;
         }
 
@@ -109,26 +94,18 @@ namespace ywcai.core.veiw
         private void reSet()
         {
             tx_username.ResetText();
-            tx_psw.ResetText();
             label_errinfo.ResetText();
         }
         private void checkInServer()
         {
             //username,psw   :   sendto service 
             String token = requestServer();
-            if (token.Equals(""))
-            {
-                uiEvent(2, token);
-            }
-            else
-            {
-                uiEvent(3,token);
-            }
+            uiEvent(3,token);
         }
         private String requestServer()
         {
-            String token = "ywcai12345678900";
-            //访问服务器，验证账号密码
+            String token = tx_username.Text;
+            //创建本地密钥文件
             Thread.Sleep(1000);
             return token;
         }
