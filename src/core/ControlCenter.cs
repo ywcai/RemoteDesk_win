@@ -23,10 +23,11 @@ namespace ywcai.core.control
         public event Action<Bitmap> updateDesk;
         private LSocket mySocket;
         public Dictionary<String, WorkSocket> sessions = new Dictionary<String, WorkSocket>();
-        private int deskWidth=600,deskHeight=1000;
-        private int serverWorkStatus=MyConfig.SERVER_WORK_STATUS_FREE;
-        private String activeId="";
-        private WorkSocket activeSocket=null;
+        private int deskWidth = 600, deskHeight = 1000;
+        private String orientation = "v";
+        private int serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
+        private String activeId = "";
+        private WorkSocket activeSocket = null;
 
         public ControlCenter()
         {
@@ -81,18 +82,25 @@ namespace ywcai.core.control
         void socket_sessionClosed(WorkSocket workSocket)
         {
             String key = workSocket.remoteDeviceId;
-            sessions.Remove(key);
-            if(key.Equals(activeId))
+            if (!sessions.ContainsKey(key))
+            {
+                return;
+            }
+            if (key.Equals(activeId))
             {
                 closeShadowForm(workSocket);
                 closeMouseSession(workSocket);
             }
-            updateInfo(key, MyConfig.INT_CLIENT_OFFLINE);
-            updateInfo("close:" + workSocket.remoteIp + ":" + workSocket.remotePort, MyConfig.INT_UPDATEUI_TXBOX);
+            if (workSocket == sessions[key])
+            {
+                sessions.Remove(key);
+                updateInfo(key, MyConfig.INT_CLIENT_OFFLINE);
+                updateInfo("close:" + workSocket.remoteIp + ":" + workSocket.remotePort, MyConfig.INT_UPDATEUI_TXBOX);
+            }
         }
-        void mySocket_ErrLog(WorkSocket workSocket,int code,string obj)
+        void mySocket_ErrLog(WorkSocket workSocket, int code, string obj)
         {
-            switch(code)
+            switch (code)
             {
                 case AppProtocol.ERR_CODE_FLAG:
                     updateInfo(workSocket.remoteIp + ":" + workSocket.remotePort + "," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
@@ -101,7 +109,7 @@ namespace ywcai.core.control
                     updateInfo(workSocket.remoteIp + ":" + workSocket.remotePort + "," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
                     break;
                 case AppProtocol.ERR_CODE_HEALTH_CHECKED:
-                    updateInfo(workSocket.remoteIp+":"+workSocket.remotePort+"," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
+                    updateInfo(workSocket.remoteIp + ":" + workSocket.remotePort + "," + code + "," + obj, MyConfig.INT_UPDATEUI_TXBOX);
                     break;
             }
         }
@@ -120,51 +128,106 @@ namespace ywcai.core.control
             byte[] payLoad = new byte[obj.Length - 1];
             System.Array.Copy(obj, 1, payLoad, 0, payLoad.Length);
             switch (obj[0])
-            { 
-            case  MyConfig.INT_APP_PROTOCOL_JSON:
+            {
+                case MyConfig.INT_APP_PROTOCOL_JSON:
                     ProccessJson(workSocket, payLoad);
                     break;
-            case  MyConfig.INT_APP_PROTOCOL_BYTE:
+                case MyConfig.INT_APP_PROTOCOL_BYTE:
                     ProccessByte(workSocket, payLoad);
                     break;
-             }
+            }
         }
         private void ProccessJson(WorkSocket workSocket, byte[] payLoad)
         {
-            ApplicationProtocol ap=MakeJson.getApplicationProtocol(payLoad);
-            updateInfo(ap.type+":"+ap.content, MyConfig.INT_UPDATEUI_TXBOX);
+            ApplicationProtocol ap = MakeJson.getApplicationProtocol(payLoad);
+            updateInfo(ap.type + ":" + ap.content, MyConfig.INT_UPDATEUI_TXBOX);
             switch (ap.type)
             {
                 case AppProtocol.json_type_req_local_check:
                     CheckPsw(workSocket, ap.content);
                     break;
-                case AppProtocol.json_type_req_local_repeat:
-                    //repeatConn(workSocket, ap.content);
-                    break;
-                //case "move":
-                //    MoveMouse(workSocket, jobject);
-                //    break;
-                //case "click":
-                //    ClickMouse(workSocket, jobject);
-                //    break;
                 case AppProtocol.json_type_req_local_open_shadow:
-                    CreateShadowContainer(workSocket, ap.content);
+                    if (serverWorkStatus == MyConfig.SERVER_WORK_STATUS_FREE)
+                    {
+                        CreateShadowContainer(workSocket, ap.content + "|" + orientation);
+                    }
+                    else
+                    {
+                        SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_fail, "服务端被占用");
+                    }
                     break;
                 case AppProtocol.json_type_req_local_close_shadow:
                     closeShadowForm(workSocket);
                     break;
                 case AppProtocol.json_type_req_local_open_mouse:
-                    startMouseMode(workSocket);
+                    if (serverWorkStatus == MyConfig.SERVER_WORK_STATUS_FREE)
+                    {
+                        startMouseMode(workSocket);
+                    }
+                    else
+                    {
+                        SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_fail, "服务端被占用");
+                    }
                     break;
                 case AppProtocol.json_type_req_local_close_mouse:
                     closeMouseMode(workSocket);
                     break;
+                case AppProtocol.json_type_req_local_repeat_conn:
+                    repeatConn(workSocket, ap.content);
+                    break;
+                case AppProtocol.json_type_req_local_refresh_screen:
+                    deskWidth = Int32.Parse(ap.content.Split('|')[0]);
+                    deskHeight = Int32.Parse(ap.content.Split('|')[1]);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_move:
+                    MoveMouse(ap.content);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_esc:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_l_down:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_l_up:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_r_down:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_r_up:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_page_up:
+                    ClickMouse(ap.type);
+                    break;
+                case AppProtocol.json_type_cmd_mouse_event_page_down:
+                    ClickMouse(ap.type);
+                    break;
             }
+        }
+
+        private void repeatConn(WorkSocket workSocket, String content)
+        {
+            DeviceInfo device = (DeviceInfo)JsonConvert.DeserializeObject(content, typeof(DeviceInfo));
+            String key = device.deviceId;
+            workSocket.remoteDeviceId = device.deviceId;
+            device.remoteIp = workSocket.remoteIp;
+            sessions[key] = workSocket;
+            updateInfo(device, MyConfig.INT_CLIENT_ONLINE);
+            if (device.status.Equals("2"))
+            {
+                CreateShadowContainer(workSocket, device.userId);
+            }
+            if (device.status.Equals("3"))
+            {
+                startMouseMode(workSocket);
+            }
+
         }
 
         private void closeMouseSession(WorkSocket workSocket)
         {
-            if(workSocket==activeSocket&&serverWorkStatus==MyConfig.SERVER_WORK_STATUS_MOUSE)
+            if (workSocket == activeSocket && serverWorkStatus == MyConfig.SERVER_WORK_STATUS_MOUSE)
             {
                 updateInfo(activeId, MyConfig.INT_CLIENT_OFFLINE);
                 serverWorkStatus = MyConfig.SERVER_WORK_STATUS_FREE;
@@ -177,18 +240,12 @@ namespace ywcai.core.control
 
         private void startMouseMode(WorkSocket workSocket)
         {
-            if(serverWorkStatus==MyConfig.SERVER_WORK_STATUS_FREE)
-            {
-                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_MOUSE;
-                activeId = workSocket.remoteDeviceId;
-                activeSocket = workSocket;
-                updateInfo(activeId, MyConfig.INT_CLIENT_BUSY);
-                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_mouse_open_ok, "连接成功!");
-            }
-            else
-            {
-                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_mouse_open_fail, "连接失败!");
-            }
+            serverWorkStatus = MyConfig.SERVER_WORK_STATUS_MOUSE;
+            activeId = workSocket.remoteDeviceId;
+            activeSocket = workSocket;
+            updateInfo(activeId, MyConfig.INT_CLIENT_BUSY);
+            SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_mouse_open_ok, "连接成功!");
+
         }
         private void closeMouseMode(WorkSocket workSocket)
         {
@@ -203,9 +260,9 @@ namespace ywcai.core.control
 
         private void ProccessByte(WorkSocket workSocket, byte[] payLoad)
         {
-            if (activeId.Equals(workSocket.remoteDeviceId)&&(workSocket==activeSocket))
+            if (activeId.Equals(workSocket.remoteDeviceId) && (workSocket == activeSocket))
             {
-                 UpdateShadowContainer(payLoad);
+                UpdateShadowContainer(payLoad);
             }
         }
         void UpdateShadowContainer(byte[] desk)
@@ -226,24 +283,18 @@ namespace ywcai.core.control
             updateDesk(desk);
         }
 
-        void CreateShadowContainer(WorkSocket workSocket,String content)
+        void CreateShadowContainer(WorkSocket workSocket, String content)
         {
-            if (serverWorkStatus==MyConfig.SERVER_WORK_STATUS_FREE)
-            {
-                deskWidth = Int32.Parse(content.Split('|')[0]);
-                deskHeight = Int32.Parse(content.Split('|')[1]);
-                activeId = workSocket.remoteDeviceId;
-                serverWorkStatus = MyConfig.SERVER_WORK_STATUS_SHADOW;
-                activeSocket = workSocket;
-                updateInfo(workSocket.remoteDeviceId, MyConfig.INT_CLIENT_BUSY);//更新设备列表
-                updateInfo("Start shadow container!", MyConfig.INT_CREATE_DESK_CONTAINER);//创建容器
-                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_ok, "连接成功");
-            }
-            else
-            {
-                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_fail, "服务端被占用");
-            }
+            deskWidth = Int32.Parse(content.Split('|')[0]);
+            deskHeight = Int32.Parse(content.Split('|')[1]);
+            activeId = workSocket.remoteDeviceId;
+            serverWorkStatus = MyConfig.SERVER_WORK_STATUS_SHADOW;
+            activeSocket = workSocket;
+            updateInfo(workSocket.remoteDeviceId, MyConfig.INT_CLIENT_BUSY);//更新设备列表
+            updateInfo("Start shadow container!", MyConfig.INT_CREATE_DESK_CONTAINER);//创建容器
+            SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_shadow_open_ok, "连接成功");
         }
+
 
         void clearActiveStatus()
         {
@@ -257,15 +308,15 @@ namespace ywcai.core.control
         {
             if (activeSocket == workSocket && activeId.Equals(workSocket.remoteDeviceId) && serverWorkStatus == MyConfig.SERVER_WORK_STATUS_SHADOW)
             {
-            clearActiveStatus();
-            updateInfo("Close shadow container!", MyConfig.INT_DELETE_DESK_CONTAINER);
+                clearActiveStatus();
+                updateInfo("Close shadow container!", MyConfig.INT_DELETE_DESK_CONTAINER);
             }
         }
 
         public void notifyCloseShadow()
         {
             //如果是服务端手动点击关闭窗口，该代码会执行
-            if(activeSocket!=null&&!activeId.Equals("")&&serverWorkStatus==MyConfig.SERVER_WORK_STATUS_SHADOW)
+            if (activeSocket != null && !activeId.Equals("") && serverWorkStatus == MyConfig.SERVER_WORK_STATUS_SHADOW)
             {
                 Thread thread = new Thread(new ThreadStart(sendToActiveCloseShadow));
                 thread.IsBackground = true;
@@ -277,33 +328,32 @@ namespace ywcai.core.control
             SendMsgToClient(activeSocket, AppProtocol.json_type_notify_back_shadow_close, "");
             clearActiveStatus();
         }
- 
-        void ClickMouse(WorkSocket workSocket, JObject jobject)
+
+        void ClickMouse(int type)
         {
             //String cmd = jobject[AppProtocol.STR_JSON_CONTENT].ToString();
-            //ResponseEvent.ReponseClick(cmd);
+            ResponseEvent.ReponseClick(type);
         }
-        private void MoveMouse(WorkSocket workSocket, JObject jobject)
+        private void MoveMouse(String content)
         {
-            //String[] postion = jobject[AppProtocol.STR_JSON_CONTENT].ToString().Split('_');
-            //int x = Int32.Parse(postion[1]);
-            //int y = Int32.Parse(postion[0]);
-            //ResponseEvent.ReponseMove(x, y);
+            int x = Int32.Parse(content.Split('|')[0]);
+            int y = Int32.Parse(content.Split('|')[1]);
+            ResponseEvent.ReponseMove(x, y);
         }
         private void CheckPsw(WorkSocket workSocket, String content)
         {
-            DeviceInfo device = (DeviceInfo)JsonConvert.DeserializeObject(content,typeof(DeviceInfo));
+            DeviceInfo device = (DeviceInfo)JsonConvert.DeserializeObject(content, typeof(DeviceInfo));
             device.remoteIp = workSocket.remoteIp;
             workSocket.remoteDeviceId = device.deviceId;
             String key = device.deviceId;
             if (sessions.ContainsKey(key))
             {
-                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_fail,"连接失败，您已经连接！");
-                return ;
+                SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_fail, "连接失败，您已经连接！");
+                return;
             }
             if (device.accessCode.Equals(myPsw))
             {
-                sessions.Add(key, workSocket);
+                sessions[key] = workSocket;
                 updateInfo(device, MyConfig.INT_CLIENT_ONLINE);
                 SendMsgToClient(workSocket, AppProtocol.json_type_notify_back_check_success, "连接成功!");
             }
